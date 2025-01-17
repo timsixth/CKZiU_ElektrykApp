@@ -15,6 +15,6 @@ public interface ArticleService {
     Optional<Article> getArticle(int id, PhotoSize photoSize);
 
     default Optional<Article> getArticle(int id) {
-        return getArticle(id, PhotoSize.FULL);
+        return getArticle(id, PhotoSize.SIZE_FULL);
     }
 }

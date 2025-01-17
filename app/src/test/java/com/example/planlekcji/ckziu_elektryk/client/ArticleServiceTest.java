@@ -48,6 +48,20 @@ public class ArticleServiceTest {
     }
 
     @Test
+    public void shouldRespondArticlesWithPaginationWithPageTwo() {
+        Page<Article> page = articleService.getArticles(2);
+
+        assertNotNull(page);
+        assertNotNull(page.data());
+        assertNotNull(page.links());
+        assertNotNull(page.links());
+        assertNotNull(page.meta());
+        assertEquals(page.meta().currentPage(), 2);
+        assertEquals(page.meta().lastPage(), 2);
+        assertEquals(page.meta().perPage(), 5);
+    }
+
+    @Test
     public void shouldGetArticleById() {
         Optional<Article> articleOptional = articleService.getArticle(5);
 

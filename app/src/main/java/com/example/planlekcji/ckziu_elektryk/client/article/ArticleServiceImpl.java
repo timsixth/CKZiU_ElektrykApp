@@ -61,10 +61,11 @@ public class ArticleServiceImpl extends ClientService implements ArticleService 
     @Override
     public Optional<Article> getArticle(int id, PhotoSize photoSize) {
         if (id <= 0)
-            throw new IllegalArgumentException("id must be greater than zero");
+            throw new IllegalArgumentException("Id must be greater than zero");
 
         APIResponseCall apiResponseCall = getData(Endpoint.ARTICLE_BY_ID
-                .withPlaceholders(Map.of("{id}", String.valueOf(id))));
+                .withPlaceholders(Map.of("{id}", String.valueOf(id),
+                        "{photo_size}", photoSize.getName())));
 
         if (!apiResponseCall.hasResponse()) return Optional.empty();
 
