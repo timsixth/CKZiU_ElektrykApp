@@ -21,7 +21,7 @@ class TimetableInfoServiceImpl extends ClientService implements TimetableInfoSer
         if (!apiResponseCall.hasResponse())
             return Optional.empty();
 
-        return Optional.of(apiResponseCall
+        return Optional.ofNullable(apiResponseCall
                 .error(printError())
                 .success(successResponse -> {
                     JsonElement jsonElement = successResponse.getJsonElement();

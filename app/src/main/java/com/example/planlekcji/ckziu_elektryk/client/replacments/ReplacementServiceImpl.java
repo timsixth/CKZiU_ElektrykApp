@@ -23,13 +23,9 @@ class ReplacementServiceImpl extends ClientService implements ReplacementService
 
         if (!apiResponseCall.hasResponse()) return Optional.empty();
 
-        try {
-            return Optional.of(apiResponseCall
+        return Optional.ofNullable(apiResponseCall
                 .error(e -> System.err.println("Error occurred: " + e.getMessage()))
                 .success(this::createReplacement));
-        } catch (Exception e) {
-            return Optional.empty();
-        }
     }
 
     @Override
@@ -41,7 +37,7 @@ class ReplacementServiceImpl extends ClientService implements ReplacementService
 
         if (!apiResponseCall.hasResponse()) return Optional.empty();
 
-        return Optional.of(apiResponseCall
+        return Optional.ofNullable(apiResponseCall
                 .error(printError())
                 .success(this::createReplacement));
     }
