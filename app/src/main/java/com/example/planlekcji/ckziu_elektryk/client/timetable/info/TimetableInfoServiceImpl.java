@@ -28,8 +28,7 @@ class TimetableInfoServiceImpl extends ClientService implements TimetableInfoSer
 
                     return new TimetableInfo(
                             jsonElement.getAsJsonObject().get("apply_at").getAsString(),
-                            LocalDate.parse(jsonElement.getAsJsonObject().get("generated_at").getAsString(),
-                                    TimetableInfo.GENERATED_AT_FORMATTER)
+                            TimetableInfo.parseDate(jsonElement.getAsJsonObject().get("generated_at").getAsString())
                     );
                 }));
     }

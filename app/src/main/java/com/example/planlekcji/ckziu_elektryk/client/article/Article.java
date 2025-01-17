@@ -1,5 +1,6 @@
 package com.example.planlekcji.ckziu_elektryk.client.article;
 
+import com.example.planlekcji.ckziu_elektryk.client.utils.DateUtil;
 import com.google.gson.annotations.SerializedName;
 
 import java.net.URL;
@@ -61,10 +62,6 @@ public class Article {
     }
 
     public static Date parsedDate(String text) {
-        try {
-            return Article.CREATION_DATE_FORMAT.parse(text);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+        return DateUtil.parsedDate(Article.CREATION_DATE_FORMAT, text);
     }
 }
