@@ -24,7 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 public class TimetableFragment extends Fragment {
+    private static final int LAST_DAY_INDEX = 4;
+
     private ViewPager2 viewPager_timetable;
+    private ViewPager2 mainPager;
     private MainViewModel mainViewModel;
 
     private Map<DayOfWeek, List<Lesson>> timetableMap;
@@ -35,6 +38,7 @@ public class TimetableFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_timetable, container, false);
 
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        mainPager = requireActivity().findViewById(R.id.viewPager2_appContent);
 
         observeAndHandleTimetableLiveData();
 
@@ -42,6 +46,13 @@ public class TimetableFragment extends Fragment {
 
         viewPager_timetable = view.findViewById(R.id.viewPager_timetable);
         viewPager_timetable.setOffscreenPageLimit(5);
+        viewPager_timetable.setUserInputEnabled(true);
+        viewPager_timetable.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                updateMainPagerSwipeState(position);
+            }
+        });
 
         setAdapterToViewPager();
 
@@ -61,6 +72,7 @@ public class TimetableFragment extends Fragment {
 
             setHeadersToTabLayout();
             setCurrentDay();
+            updateMainPagerSwipeState(viewPager_timetable.getCurrentItem());
         });
     }
 
@@ -98,5 +110,11 @@ public class TimetableFragment extends Fragment {
         };
 
         viewPager_timetable.setCurrentItem(dayNumb);
+    }
+
+    private void updateMainPagerSwipeState(int dayPosition) {
+        if (mainPager != null) {
+            mainPager.setUserInputEnabled(dayPosition == LAST_DAY_INDEX);
+        }
     }
 }
