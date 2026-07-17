@@ -367,7 +367,7 @@ public final class PreviewDataStore {
         List<SchoolEntry> entries = new ArrayList<>();
 
         for (String shortcut : shortcuts) {
-            SchoolEntry schoolEntry = new SchoolEntry(shortcut, "preview://" + shortcut.toLowerCase());
+            SchoolEntry schoolEntry = new SchoolEntry(shortcut);
             schoolEntry.setName(TEACHER_NAMES.getOrDefault(shortcut, "Preview " + shortcut));
             entries.add(schoolEntry);
         }

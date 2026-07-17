@@ -1,24 +1,19 @@
 package com.example.planlekcji.ckziu_elektryk.client.timetable;
 
+import androidx.annotation.NonNull;
+
 public class SchoolEntry {
 
-
     private final String shortcut;
-    private final String url;
     private String name;
 
-    public SchoolEntry(String shortcut, String url) {
+    public SchoolEntry(String shortcut) {
         this.shortcut = shortcut;
-        this.url = url;
         this.name = "";
     }
 
     public String shortcut() {
         return shortcut;
-    }
-
-    public String url() {
-        return url;
     }
 
     public String name() {
@@ -29,11 +24,11 @@ public class SchoolEntry {
         this.name = name;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "SchoolEntry{" +
                 "shortcut='" + shortcut + '\'' +
-                ", url='" + url + '\'' +
                 ", name='" + name + '\'' +
                 '}';
     }

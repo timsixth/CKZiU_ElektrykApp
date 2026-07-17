@@ -13,9 +13,11 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.internal.LinkedTreeMap;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -26,6 +28,7 @@ public abstract class ClientService {
     private final OkHttpClient httpClient;
     protected final Gson gson;
     private final Config config;
+    private static final String USER_AGENT_NAME = "ElektrykClient";
 
     protected ClientService(Config config) {
         this.config = config;
@@ -34,8 +37,14 @@ public abstract class ClientService {
     }
 
     protected APIResponseCall getData(@NonNull Endpoint endpoint, BiFunction<Integer, JsonElement, SuccessResponse> successResponseBiFunction) {
+        Map<String, String> headers = Map.of(
+                "Authorization", config.getToken(),
+                "User-Agent", USER_AGENT_NAME,
+                "Accept", "application/json"
+        );
+
         Request request = new Request.Builder()
-                .addHeader("Authorization", config.getToken())
+                .headers(Headers.of(headers))
                 .url(config.getAPIUrl() + "/" + endpoint.getName())
                 .get()
                 .build();
