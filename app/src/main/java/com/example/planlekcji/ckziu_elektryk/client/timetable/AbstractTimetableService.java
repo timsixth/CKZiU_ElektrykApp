@@ -46,8 +46,7 @@ public abstract class AbstractTimetableService extends ClientService implements 
                         JsonObject jsonObject = element.getAsJsonObject();
 
                         SchoolEntry entry = new SchoolEntry(
-                                jsonObject.get("shortcut").getAsString(),
-                                jsonObject.get("url").getAsString()
+                                jsonObject.get("shortcut").getAsString()
                         );
 
                         if (jsonObject.has("name"))

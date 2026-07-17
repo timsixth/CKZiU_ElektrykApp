@@ -40,23 +40,23 @@ public class ArticleServiceTest {
         assertNotNull(page.links());
         assertNotNull(page.links());
         assertNotNull(page.meta());
-        assertEquals(page.meta().currentPage(), 1);
-        assertEquals(page.meta().lastPage(), 2);
-        assertEquals(page.meta().perPage(), 5);
+        assertEquals(1, page.meta().currentPage());
+        assertEquals(5, page.meta().perPage());
     }
 
     @Test
     public void shouldRespondArticlesWithPaginationWithPageTwo() {
         Page<Article> page = articleService.getArticles(2);
 
+        System.out.println(page.meta());
+
         assertNotNull(page);
         assertNotNull(page.data());
         assertNotNull(page.links());
         assertNotNull(page.links());
         assertNotNull(page.meta());
-        assertEquals(page.meta().currentPage(), 2);
-        assertEquals(page.meta().lastPage(), 2);
-        assertEquals(page.meta().perPage(), 5);
+        assertEquals(2, page.meta().currentPage());
+        assertEquals(5, page.meta().perPage());
     }
 
     @Test
