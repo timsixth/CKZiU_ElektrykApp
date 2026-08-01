@@ -36,6 +36,8 @@
     <string name="previous_photo">Previous photo</string>
     <string name="next_photo">Next photo</string>
     <string name="no_calendar_events">No calendar events available</string>
+    <string name="lesson_label">Lesson %1$s</string>
+    <string name="replacement_details_format" translatable="false">%1$s - %2$s</string>
     <string name="toastErrorMessage_failedApiConnection">Unable to connect to the server.</string>
     <string name="toastErrorMessage_noInternetConnection">Internet connection is required.</string>
     <string name="toastErrorMessage_noInternetConnectionRetry">No internet connection. Trying to reconnect…</string>

@@ -30,6 +30,7 @@
     <string name="next_photo">Następne zdjęcie</string>
     <string name="article_image_description">Zdjęcie artykułu</string>
     <string name="no_calendar_events">Brak wydarzeń w kalendarzu</string>
+    <string name="lesson_label">Lekcja %1$s</string>
     <string name="toastErrorMessage_failedApiConnection">Nie udało się nawiązać połączenia z serwerem.</string>
     <string name="toastErrorMessage_noInternetConnection">Wymagane połączenie z internetem.</string>
     <string name="toastErrorMessage_noInternetConnectionRetry">Brak połączenia z internetem. Ponawianie połączenia.</string>

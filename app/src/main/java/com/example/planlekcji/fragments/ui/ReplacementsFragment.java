@@ -2,7 +2,6 @@ package com.example.planlekcji.fragments.ui;
 
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -13,10 +12,12 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
 import com.example.planlekcji.ckziu_elektryk.client.replacements.Replacement;
 import com.example.planlekcji.ckziu_elektryk.client.replacements.ReplacementChange;
+import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.replacements.ReplacementDataDownloader;
 
 import java.text.SimpleDateFormat;
@@ -65,7 +66,7 @@ public class ReplacementsFragment extends Fragment {
         }
 
         Date[] dates = ReplacementDataDownloader.getNext5Dates(); // holds next 5 non-weekend dates
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd EEEE", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
 
         for (int i = 0; i < replacements.size(); i++) {
             List<Replacement> dayReplacements = replacements.get(i);
@@ -75,36 +76,52 @@ public class ReplacementsFragment extends Fragment {
             LinearLayout dayCardLayout = dayCard.findViewById(R.id.replacementDay_layout);
 
             TextView dayTitle = dayCard.findViewById(R.id.textView_dayTitle);
-            dayTitle.setText(sdf.format(dates[i]));
+            String formattedDate = sdf.format(dates[i]);
+            if (!formattedDate.isEmpty()) {
+                formattedDate = Character.toUpperCase(formattedDate.charAt(0)) + formattedDate.substring(1);
+            }
+            dayTitle.setText(formattedDate);
+
+            boolean isClassType = (MainActivity.getTimetableType() == SchoolEntryType.CLASSES);
 
             for (Replacement replacement : dayReplacements) {
-                CardView replacementCard = (CardView) inflater.inflate(R.layout.replacement_card, dayCardLayout, false);
-                TextView replacementTitle = replacementCard.findViewById(R.id.textView_replacementTitle);
-                TextView replacementDetails = replacementCard.findViewById(R.id.textView_replacementDetails);
+                if (replacement.changes() != null && !replacement.changes().isEmpty()) {
+                    for (ReplacementChange change : replacement.changes()) {
+                        CardView replacementCard = (CardView) inflater.inflate(R.layout.replacement_card, dayCardLayout, false);
+                        TextView replacementTitle = replacementCard.findViewById(R.id.textView_replacementTitle);
+                        TextView replacementDetails = replacementCard.findViewById(R.id.textView_replacementDetails);
 
-                replacementTitle.setText(replacement.name());
+                        String lessonText = getString(R.string.lesson_label, change.period());
 
-                StringBuilder details = getReplacementDetails(replacement);
-                replacementDetails.setText(details.toString());
+                        if (isClassType) {
+                            String info = change.info();
+                            String subjectName = info;
+                            String statusOrTeacher = "";
 
-                dayCardLayout.addView(replacementCard);
+                            if (info != null && info.contains(" - ")) {
+                                String[] parts = info.split(" - ", 2);
+                                subjectName = parts[0].trim();
+                                statusOrTeacher = parts[1].trim();
+                            }
+
+                            replacementTitle.setText(subjectName);
+                            if (!statusOrTeacher.isEmpty()) {
+                                replacementDetails.setText(getString(R.string.replacement_details_format, lessonText, statusOrTeacher));
+                            } else {
+                                replacementDetails.setText(lessonText);
+                            }
+                        } else {
+                            replacementTitle.setText(replacement.name());
+                            replacementDetails.setText(getString(R.string.replacement_details_format, lessonText, change.info()));
+                        }
+
+                        dayCardLayout.addView(replacementCard);
+                    }
+                }
             }
 
             layout.addView(dayCard);
         }
-    }
-
-    private static @NonNull StringBuilder getReplacementDetails(Replacement replacement) {
-        List<ReplacementChange> changes = replacement.changes();
-        StringBuilder stringBuilder = new StringBuilder();
-        for (ReplacementChange change : changes) {
-            stringBuilder.append(change.period()).append(" | ").append(change.info()).append("\n");
-        }
-
-        if (stringBuilder.length() > 0 && stringBuilder.charAt(stringBuilder.length() - 1) == '\n') {
-            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        }
-        return stringBuilder;
     }
 
     private boolean areReplacementsEmpty() {
