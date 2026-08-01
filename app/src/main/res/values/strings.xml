@@ -35,6 +35,7 @@
     <string name="article_image_description">Article image</string>
     <string name="previous_photo">Previous photo</string>
     <string name="next_photo">Next photo</string>
+    <string name="no_calendar_events">No calendar events available</string>
     <string name="toastErrorMessage_failedApiConnection">Unable to connect to the server.</string>
     <string name="toastErrorMessage_noInternetConnection">Internet connection is required.</string>
     <string name="toastErrorMessage_noInternetConnectionRetry">No internet connection. Trying to reconnect…</string>

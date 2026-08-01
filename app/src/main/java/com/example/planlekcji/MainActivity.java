@@ -69,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
         );
 
+        mainViewModel.getIsLoadingCalendar().observe(this, isLoading ->
+            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
+        );
+
         // Set adapter
         ViewPager2 viewPager2_appContent = findViewById(R.id.viewPager2_appContent);
 

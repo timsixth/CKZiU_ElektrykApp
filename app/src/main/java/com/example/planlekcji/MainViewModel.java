@@ -7,11 +7,14 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.planlekcji.articles.ArticleDataDownloader;
+import com.example.planlekcji.calendar.CalendarDataDownloader;
 import com.example.planlekcji.ckziu_elektryk.client.CKZiUElektrykClient;
 import com.example.planlekcji.ckziu_elektryk.client.article.Article;
+import com.example.planlekcji.ckziu_elektryk.client.calendar.Calendar;
 import com.example.planlekcji.ckziu_elektryk.client.replacements.Replacement;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.listener.ArticlesDownloadCompleteListener;
+import com.example.planlekcji.listener.CalendarDownloadCompleteListener;
 import com.example.planlekcji.listener.ReplacementsDownloadCompleteListener;
 import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
 import com.example.planlekcji.replacements.ReplacementDataDownloader;
@@ -30,16 +33,19 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<List<List<Replacement>>> replacements = new MutableLiveData<>();
     private final MutableLiveData<Map<DayOfWeek, List<Lesson>>> timetable = new MutableLiveData<>();
     private final MutableLiveData<List<Article>> articles = new MutableLiveData<>();
+    private final MutableLiveData<Calendar> calendar = new MutableLiveData<>();
 
     // ProgressBar state
     private final MutableLiveData<Boolean> isLoadingReplacements = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoadingTimetable = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoadingArticles = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> isLoadingCalendar = new MutableLiveData<>(false);
 
     // Retry handlers
     private final RetryHandler replaceRetryHandler = new RetryHandler(this::startReplacementDownload);
     private final RetryHandler timetableRetryHandler = new RetryHandler(this::startTimetableDownload);
     private final RetryHandler articlesRetryHandler = new RetryHandler(this::startArticlesDownload);
+    private final RetryHandler calendarRetryHandler = new RetryHandler(this::startCalendarDownload);
 
     public MainViewModel() {
         client = new CKZiUElektrykClient();
@@ -61,6 +67,7 @@ public class MainViewModel extends ViewModel {
         startReplacementDownload();
         startTimetableDownload();
         startArticlesDownload();
+        startCalendarDownload();
     }
 
     public void fetchReplacements() {
@@ -73,6 +80,10 @@ public class MainViewModel extends ViewModel {
 
     public void fetchArticles() {
         startArticlesDownload();
+    }
+
+    public void fetchCalendar() {
+        startCalendarDownload();
     }
 
     private void startReplacementDownload() {
@@ -129,6 +140,24 @@ public class MainViewModel extends ViewModel {
         new Thread(downloader).start();
     }
 
+    private void startCalendarDownload() {
+        isLoadingCalendar.postValue(true);
+        CalendarDataDownloader downloader = new CalendarDataDownloader(client, new CalendarDownloadCompleteListener() {
+            @Override
+            public void onDownloadComplete(Calendar calendarData) {
+                calendar.postValue(calendarData);
+                isLoadingCalendar.postValue(false);
+            }
+
+            @Override
+            public void onDownloadFailed() {
+                isLoadingCalendar.postValue(false);
+                calendarRetryHandler.handleRetry();
+            }
+        });
+        new Thread(downloader).start();
+    }
+
     // LiveData getters
     public LiveData<Map<DayOfWeek, List<Lesson>>> getTimetableLiveData() {
         return timetable;
@@ -142,6 +171,10 @@ public class MainViewModel extends ViewModel {
         return articles;
     }
 
+    public LiveData<Calendar> getCalendarLiveData() {
+        return calendar;
+    }
+
     public LiveData<Boolean> getIsLoadingReplacements() {
         return isLoadingReplacements;
     }
@@ -152,6 +185,10 @@ public class MainViewModel extends ViewModel {
 
     public LiveData<Boolean> getIsLoadingArticles() {
         return isLoadingArticles;
+    }
+
+    public LiveData<Boolean> getIsLoadingCalendar() {
+        return isLoadingCalendar;
     }
 
     public CKZiUElektrykClient getClient() {
