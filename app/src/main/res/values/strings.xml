@@ -8,6 +8,7 @@
     <string name="searchKey" translatable="false">searchingKey</string>
     <string name="navigate_timetable">Timetable</string>
     <string name="navigate_replacements">Replacements</string>
+    <string name="navigate_articles">Articles</string>
     <string name="navigate_settings">Settings</string>
     <string name="settingsButton_description">Open settings</string>
     <string name="mondayShortcut">Mon</string>

@@ -77,15 +77,19 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout_navigate = findViewById(R.id.tabLayout_navigate);
         new TabLayoutMediator(tabLayout_navigate, viewPager2_appContent, (tab, position) -> {
             switch (position) {
-                case 0:
+                case ViewPagerAdapter.TIMETABLE_TAB_ID:
                     tab.setText(R.string.navigate_timetable);
                     tab.setIcon(R.drawable.timetable_icon);
                     break;
-                case 1:
+                case ViewPagerAdapter.REPLACEMENTS_TAB_ID:
                     tab.setText(R.string.navigate_replacements);
                     tab.setIcon(R.drawable.replacement_icon);
                     break;
-                case 2:
+                case ViewPagerAdapter.ARTICLES_TAB_ID:
+                    tab.setText(R.string.navigate_articles);
+                    tab.setIcon(R.drawable.articles_icon);
+                    break;
+                case ViewPagerAdapter.SETTINGS_TAB_ID:
                     tab.setText(R.string.navigate_settings);
                     tab.setIcon(R.drawable.settings_icon);
                     break;
