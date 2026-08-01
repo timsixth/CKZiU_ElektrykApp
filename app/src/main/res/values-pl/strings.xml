@@ -3,6 +3,8 @@
     <string name="app_name">Plan lekcji</string>
     <string name="navigate_timetable">Plan lekcji</string>
     <string name="navigate_replacements">Zastępstwa</string>
+    <string name="navigate_articles">Artykuły</string>
+    <string name="navigate_calendar">Kalendarz</string>
     <string name="navigate_settings">Ustawienia</string>
     <string name="settingsButton_description">Otwórz ustawienia</string>
     <string name="mondayShortcut">Pon</string>
