@@ -98,7 +98,7 @@ public class ArticlesFragment extends Fragment {
                 imageViewHeader.setVisibility(View.VISIBLE);
                 Glide.with(this)
                         .load(article.getHeaderImageUrl().toString())
-                        .placeholder(R.drawable.round_corner)
+                        .placeholder(R.drawable.image_placeholder)
                         .into(imageViewHeader);
             }
 
@@ -219,7 +219,7 @@ public class ArticlesFragment extends Fragment {
 
             Glide.with(this)
                     .load(urlStr)
-                    .placeholder(R.drawable.round_corner)
+                    .placeholder(R.drawable.image_placeholder)
                     .into(thumbnail);
 
             card.addView(thumbnail);
