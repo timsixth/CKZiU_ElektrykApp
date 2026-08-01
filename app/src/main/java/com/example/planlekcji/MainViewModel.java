@@ -6,15 +6,18 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.planlekcji.articles.ArticleDataDownloader;
 import com.example.planlekcji.ckziu_elektryk.client.CKZiUElektrykClient;
+import com.example.planlekcji.ckziu_elektryk.client.article.Article;
 import com.example.planlekcji.ckziu_elektryk.client.replacements.Replacement;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
-import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
+import com.example.planlekcji.listener.ArticlesDownloadCompleteListener;
 import com.example.planlekcji.listener.ReplacementsDownloadCompleteListener;
+import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
 import com.example.planlekcji.replacements.ReplacementDataDownloader;
+import com.example.planlekcji.timetable.TimetableDataDownloader;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 import com.example.planlekcji.utils.RetryHandler;
-import com.example.planlekcji.timetable.TimetableDataDownloader;
 import com.example.planlekcji.utils.ToastUtils;
 
 import java.util.List;
@@ -26,14 +29,17 @@ public class MainViewModel extends ViewModel {
     // Downloaded data
     private final MutableLiveData<List<List<Replacement>>> replacements = new MutableLiveData<>();
     private final MutableLiveData<Map<DayOfWeek, List<Lesson>>> timetable = new MutableLiveData<>();
+    private final MutableLiveData<List<Article>> articles = new MutableLiveData<>();
 
     // ProgressBar state
     private final MutableLiveData<Boolean> isLoadingReplacements = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoadingTimetable = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> isLoadingArticles = new MutableLiveData<>(false);
 
     // Retry handlers
     private final RetryHandler replaceRetryHandler = new RetryHandler(this::startReplacementDownload);
     private final RetryHandler timetableRetryHandler = new RetryHandler(this::startTimetableDownload);
+    private final RetryHandler articlesRetryHandler = new RetryHandler(this::startArticlesDownload);
 
     public MainViewModel() {
         client = new CKZiUElektrykClient();
@@ -54,6 +60,7 @@ public class MainViewModel extends ViewModel {
     public void fetchData() {
         startReplacementDownload();
         startTimetableDownload();
+        startArticlesDownload();
     }
 
     public void fetchReplacements() {
@@ -62,6 +69,10 @@ public class MainViewModel extends ViewModel {
 
     public void fetchTimetable() {
         startTimetableDownload();
+    }
+
+    public void fetchArticles() {
+        startArticlesDownload();
     }
 
     private void startReplacementDownload() {
@@ -100,6 +111,24 @@ public class MainViewModel extends ViewModel {
         new Thread(downloader).start();
     }
 
+    private void startArticlesDownload() {
+        isLoadingArticles.postValue(true);
+        ArticleDataDownloader downloader = new ArticleDataDownloader(client, new ArticlesDownloadCompleteListener() {
+            @Override
+            public void onDownloadComplete(List<Article> articleList) {
+                articles.postValue(articleList);
+                isLoadingArticles.postValue(false);
+            }
+
+            @Override
+            public void onDownloadFailed() {
+                isLoadingArticles.postValue(false);
+                articlesRetryHandler.handleRetry();
+            }
+        });
+        new Thread(downloader).start();
+    }
+
     // LiveData getters
     public LiveData<Map<DayOfWeek, List<Lesson>>> getTimetableLiveData() {
         return timetable;
@@ -109,12 +138,20 @@ public class MainViewModel extends ViewModel {
         return replacements;
     }
 
+    public LiveData<List<Article>> getArticlesLiveData() {
+        return articles;
+    }
+
     public LiveData<Boolean> getIsLoadingReplacements() {
         return isLoadingReplacements;
     }
 
     public LiveData<Boolean> getIsLoadingTimetable() {
         return isLoadingTimetable;
+    }
+
+    public LiveData<Boolean> getIsLoadingArticles() {
+        return isLoadingArticles;
     }
 
     public CKZiUElektrykClient getClient() {

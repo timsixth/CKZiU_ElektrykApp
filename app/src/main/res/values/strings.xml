@@ -30,6 +30,11 @@
     <string name="goBackButton_description">Go back</string>
     <string name="settings_extraInfo">This application was created by a graduate of the CKZiU Elektryk school</string>
     <string name="no_replacements">No replacements</string>
+    <string name="no_articles">No articles available</string>
+    <string name="photo_counter_format" translatable="false">%1$d / %2$d</string>
+    <string name="article_image_description">Article image</string>
+    <string name="previous_photo">Previous photo</string>
+    <string name="next_photo">Next photo</string>
     <string name="toastErrorMessage_failedApiConnection">Unable to connect to the server.</string>
     <string name="toastErrorMessage_noInternetConnection">Internet connection is required.</string>
     <string name="toastErrorMessage_noInternetConnectionRetry">No internet connection. Trying to reconnect…</string>
