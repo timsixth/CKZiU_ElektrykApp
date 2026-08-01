@@ -71,14 +71,7 @@ public class MainActivity extends AppCompatActivity {
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
         viewPager2_appContent.setAdapter(adapter);
         viewPager2_appContent.setOffscreenPageLimit(3);
-        viewPager2_appContent.setUserInputEnabled(false);
-        viewPager2_appContent.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                // Timetable needs its own horizontal swipe handling.
-                viewPager2_appContent.setUserInputEnabled(position != ViewPagerAdapter.TIMETABLE_TAB_ID);
-            }
-        });
+        viewPager2_appContent.setUserInputEnabled(true);
 
         // Connect the TabLayout (navigation) with the ViewPager2 (app content)
         TabLayout tabLayout_navigate = findViewById(R.id.tabLayout_navigate);
