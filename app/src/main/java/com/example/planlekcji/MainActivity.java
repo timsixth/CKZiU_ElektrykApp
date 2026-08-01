@@ -89,6 +89,10 @@ public class MainActivity extends AppCompatActivity {
                     tab.setText(R.string.navigate_articles);
                     tab.setIcon(R.drawable.articles_icon);
                     break;
+                case ViewPagerAdapter.CALENDAR_TAB_ID:
+                    tab.setText(R.string.navigate_calendar);
+                    tab.setIcon(R.drawable.calendar_icon);
+                    break;
                 case ViewPagerAdapter.SETTINGS_TAB_ID:
                     tab.setText(R.string.navigate_settings);
                     tab.setIcon(R.drawable.settings_icon);
