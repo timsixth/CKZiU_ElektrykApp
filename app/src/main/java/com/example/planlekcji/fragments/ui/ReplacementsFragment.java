@@ -56,11 +56,8 @@ public class ReplacementsFragment extends Fragment {
         layout.removeAllViews();
 
         if(replacements == null || replacements.isEmpty() || areReplacementsEmpty()) {
-            CardView dayCard = (CardView) inflater.inflate(R.layout.replacement_day_card, layout, false);
-            TextView dayTitle = dayCard.findViewById(R.id.textView_dayTitle);
-            dayTitle.setText(R.string.no_replacements);
-
-            layout.addView(dayCard);
+            View emptyView = inflater.inflate(R.layout.replacement_empty_state, layout, false);
+            layout.addView(emptyView);
 
             return;
         }

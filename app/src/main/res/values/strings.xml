@@ -30,6 +30,7 @@
     <string name="goBackButton_description">Go back</string>
     <string name="settings_extraInfo">This application was created by a graduate of the CKZiU Elektryk school</string>
     <string name="no_replacements">No replacements</string>
+    <string name="no_replacements_description">All lessons are taking place according to schedule</string>
     <string name="no_articles">No articles available</string>
     <string name="photo_counter_format" translatable="false">%1$d / %2$d</string>
     <string name="article_image_description">Article image</string>
