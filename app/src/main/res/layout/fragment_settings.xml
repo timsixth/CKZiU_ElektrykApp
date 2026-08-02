@@ -1,123 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:scrollbars="none"
     tools:context=".fragments.ui.SettingsFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
 
-        <TextView
-            android:id="@+id/textView_selectTimetableType"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
-            android:text="@string/timetableType"
-            android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Spinner
-            android:id="@+id/spinnerUserType"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp"
-            android:entries="@array/timetableTypeSpinnerItems"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="@+id/textView_selectTimetableType"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/textView_selectTimetableType"
-            app:layout_constraintTop_toTopOf="@+id/textView_selectTimetableType" />
-
-        <TextView
-            android:id="@+id/textView_selectClass"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:gravity="center_vertical"
-            android:text="@string/selectClass"
-            android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="@+id/textView_selectTimetableType"
-            app:layout_constraintTop_toBottomOf="@+id/textView_selectTimetableType" />
-
-        <Spinner
-            android:id="@+id/spinnerClassTokens"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp"
-            android:entries="@array/exampleClassesSpinnerItems"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="@+id/textView_selectClass"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/textView_selectClass"
-            app:layout_constraintTop_toTopOf="@+id/textView_selectClass" />
-
-        <TextView
-            android:id="@+id/textView_selectTeacher"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:gravity="center_vertical"
-            android:text="@string/selectTeacher"
-            android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="@+id/textView_selectClass"
-            app:layout_constraintTop_toBottomOf="@+id/textView_selectClass" />
-
-        <Spinner
-            android:id="@+id/spinnerTeacherTokens"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp"
-            android:entries="@array/exampleTeachersSpinnerItems"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="@+id/textView_selectTeacher"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/textView_selectTeacher"
-            app:layout_constraintTop_toTopOf="@+id/textView_selectTeacher" />
-
-        <TextView
-            android:id="@+id/textView_selectClassroom"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:gravity="center_vertical"
-            android:text="@string/selectClassroom"
-            android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="@+id/textView_selectTeacher"
-            app:layout_constraintTop_toBottomOf="@+id/textView_selectTeacher" />
-
-        <Spinner
-            android:id="@+id/spinnerClassroomTokens"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp"
-            android:entries="@array/exampleClassroomsSpinnerItems"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="@+id/textView_selectClassroom"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/textView_selectClassroom"
-            app:layout_constraintTop_toTopOf="@+id/textView_selectClassroom" />
-
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="0dp"
+        <!-- Card 1: Timetable Type -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="24dp"
-            android:text="@string/settings_extraInfo"
-            android:textAlignment="center"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="#2C2C2E"
+            app:strokeWidth="1dp">
 
+            <LinearLayout
+                android:id="@+id/layout_timetableType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="12dp">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                <TextView
+                    android:id="@+id/textView_selectTimetableType"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/timetableType"
+                    android:textColor="#E0E0E0"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
-</FrameLayout>
+                <Spinner
+                    android:id="@+id/spinnerUserType"
+                    android:layout_width="160dp"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#FFC107"
+                    android:spinnerMode="dropdown" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 2: Select Class / Teacher / Classroom -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardSelection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="#2C2C2E"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Class Selection Row -->
+                <LinearLayout
+                    android:id="@+id/layout_selectClass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/textView_selectClass"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/selectClass"
+                        android:textColor="#E0E0E0"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/spinnerClassTokens"
+                        android:layout_width="160dp"
+                        android:layout_height="48dp"
+                        android:backgroundTint="#FFC107"
+                        android:spinnerMode="dropdown" />
+                </LinearLayout>
+
+                <!-- Teacher Selection Row -->
+                <LinearLayout
+                    android:id="@+id/layout_selectTeacher"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/textView_selectTeacher"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/selectTeacher"
+                        android:textColor="#E0E0E0"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/spinnerTeacherTokens"
+                        android:layout_width="160dp"
+                        android:layout_height="48dp"
+                        android:backgroundTint="#FFC107"
+                        android:spinnerMode="dropdown" />
+                </LinearLayout>
+
+                <!-- Classroom Selection Row -->
+                <LinearLayout
+                    android:id="@+id/layout_selectClassroom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/textView_selectClassroom"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/selectClassroom"
+                        android:textColor="#E0E0E0"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/spinnerClassroomTokens"
+                        android:layout_width="160dp"
+                        android:layout_height="48dp"
+                        android:backgroundTint="#FFC107"
+                        android:spinnerMode="dropdown" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</ScrollView>

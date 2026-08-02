@@ -52,12 +52,26 @@ public class SettingsFragment extends Fragment {
         Spinner spinnerClassTokens = view.findViewById(R.id.spinnerClassTokens);
         Spinner spinnerTeacherTokens = view.findViewById(R.id.spinnerTeacherTokens);
         Spinner spinnerClassroomTokens = view.findViewById(R.id.spinnerClassroomTokens);
+        Spinner spinnerUserType = view.findViewById(R.id.spinnerUserType);
 
         setSpinner(spinnerClassTokens, classesSchoolEntries, getString(R.string.classTokenKey));
         setSpinner(spinnerTeacherTokens, teachersSchoolEntries, getString(R.string.teacherTokenKey));
         setSpinner(spinnerClassroomTokens, classroomsSchoolEntries, getString(R.string.classroomTokenKey));
 
         setTypeOfTimetableSpinner();
+
+        // Make entire card rows clickable to open their corresponding spinner
+        setupRowClickListener(R.id.layout_timetableType, spinnerUserType);
+        setupRowClickListener(R.id.layout_selectClass, spinnerClassTokens);
+        setupRowClickListener(R.id.layout_selectTeacher, spinnerTeacherTokens);
+        setupRowClickListener(R.id.layout_selectClassroom, spinnerClassroomTokens);
+    }
+
+    private void setupRowClickListener(int rowId, Spinner spinner) {
+        View rowView = view.findViewById(rowId);
+        if (rowView != null && spinner != null) {
+            rowView.setOnClickListener(v -> spinner.performClick());
+        }
     }
 
     private void setSpinner(Spinner spinner, List<SchoolEntry> schoolEntries, String sharedPreferencesToken) {
@@ -66,8 +80,8 @@ public class SettingsFragment extends Fragment {
             tokenList.add(schoolEntry.shortcut());
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.getContext(), android.R.layout.simple_list_item_1, tokenList);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), R.layout.spinner_item, tokenList);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinner.setAdapter(adapter);
 
         String token = sharedPref.getString(sharedPreferencesToken, "");
@@ -105,6 +119,14 @@ public class SettingsFragment extends Fragment {
     private void setTypeOfTimetableSpinner() {
         Spinner spinnerUserType = view.findViewById(R.id.spinnerUserType);
 
+        ArrayAdapter<CharSequence> userTypeAdapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.timetableTypeSpinnerItems,
+                R.layout.spinner_item
+        );
+        userTypeAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        spinnerUserType.setAdapter(userTypeAdapter);
+
         int typeIndex = sharedPref.getInt(getString(R.string.selectedTypeOfTimetableKey), 0);
         spinnerUserType.setSelection(typeIndex);
 
@@ -136,6 +158,14 @@ public class SettingsFragment extends Fragment {
         if(whichIsVisible == 1) classVisibility = View.VISIBLE;
         else if(whichIsVisible == 2) teacherVisibility = View.VISIBLE;
         else if(whichIsVisible == 3) classroomVisibility = View.VISIBLE;
+
+        View layoutClass = view.findViewById(R.id.layout_selectClass);
+        View layoutTeacher = view.findViewById(R.id.layout_selectTeacher);
+        View layoutClassroom = view.findViewById(R.id.layout_selectClassroom);
+
+        if (layoutClass != null) layoutClass.setVisibility(classVisibility);
+        if (layoutTeacher != null) layoutTeacher.setVisibility(teacherVisibility);
+        if (layoutClassroom != null) layoutClassroom.setVisibility(classroomVisibility);
 
         view.findViewById(R.id.textView_selectClass).setVisibility(classVisibility);
         view.findViewById(R.id.textView_selectTeacher).setVisibility(teacherVisibility);
