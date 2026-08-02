@@ -5,19 +5,4 @@
         <item>@string/teachers</item>
         <item>@string/classrooms</item>
     </string-array>
-    <string-array name="exampleClassesSpinnerItems">
-        <item>1 ATN</item>
-        <item>1 BTN</item>
-        <item>1 CTN</item>
-    </string-array>
-    <string-array name="exampleTeachersSpinnerItems">
-        <item>AA</item>
-        <item>AB</item>
-        <item>AC</item>
-    </string-array>
-    <string-array name="exampleClassroomsSpinnerItems">
-        <item>A10</item>
-        <item>B20</item>
-        <item>C30</item>
-    </string-array>
 </resources>

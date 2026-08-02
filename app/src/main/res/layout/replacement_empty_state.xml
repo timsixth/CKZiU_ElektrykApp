@@ -30,7 +30,6 @@
     </com.google.android.material.card.MaterialCardView>
 
     <TextView
-        android:id="@+id/textView_noReplacementsTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="6dp"
@@ -40,7 +39,6 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/textView_noReplacementsSubtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"

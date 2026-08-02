@@ -43,7 +43,6 @@
                 android:paddingBottom="12dp">
 
                 <TextView
-                    android:id="@+id/textView_selectTimetableType"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -63,7 +62,6 @@
 
         <!-- Card 2: Select Class / Teacher / Classroom -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardSelection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"

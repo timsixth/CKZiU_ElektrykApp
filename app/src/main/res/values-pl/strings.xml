@@ -6,15 +6,12 @@
     <string name="navigate_articles">Artykuły</string>
     <string name="navigate_calendar">Kalendarz</string>
     <string name="navigate_settings">Ustawienia</string>
-    <string name="settingsButton_description">Otwórz ustawienia</string>
     <string name="mondayShortcut">Pon</string>
     <string name="tuesdayShortcut">Wto</string>
     <string name="wednesdayShortcut">Śrd</string>
     <string name="fridayShortcut">Ptk</string>
     <string name="thursdayShortcut">Czw</string>
-    <string name="searchHint_searchBar">Wyszukaj</string>
     <string name="noResults_text">Brak wyników. Poniżej znajdują się wszystkie nieprzefiltrowane zastępstwa.</string>
-    <string name="settings_header">Ustawienia</string>
     <string name="timetableType">Rodzaj planu</string>
     <string name="selectClass">Wybierz klasę</string>
     <string name="selectTeacher">Wybierz nauczyciela</string>
@@ -23,7 +20,6 @@
     <string name="teachers">Nauczyciele</string>
     <string name="classrooms">Sale</string>
     <string name="goBackButton_description">Powrót</string>
-    <string name="settings_extraInfo">Aplikacja została stworzona przez absolwenta szkoły CKZiU Elektryk</string>
     <string name="no_replacements">Brak zastępstw</string>
     <string name="no_replacements_description">Wszystkie lekcje odbywają się zgodnie z planem</string>
     <string name="no_articles">Brak artykułów</string>

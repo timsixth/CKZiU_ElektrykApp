@@ -19,31 +19,26 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.tabs.TabItem
-                android:id="@+id/tabItem_day_monday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/mondayShortcut" />
 
             <com.google.android.material.tabs.TabItem
-                android:id="@+id/tabItem_day_tuesday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tuesdayShortcut" />
 
             <com.google.android.material.tabs.TabItem
-                android:id="@+id/tabItem_day_wednesday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/wednesdayShortcut" />
 
             <com.google.android.material.tabs.TabItem
-                android:id="@+id/tabItem_day_thursday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/thursdayShortcut" />
 
             <com.google.android.material.tabs.TabItem
-                android:id="@+id/tabItem_day_friday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/fridayShortcut" />

@@ -11,7 +11,6 @@
         android:layout_height="match_parent">
 
         <ScrollView
-            android:id="@+id/scrollView_replacements"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginStart="8dp"
@@ -39,7 +38,6 @@
                     android:visibility="gone" />
 
                 <TextView
-                    android:id="@+id/textView_noResults"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -52,7 +50,6 @@
                     android:visibility="gone" />
 
                 <TextView
-                    android:id="@+id/textView_replacements"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginStart="8dp"
