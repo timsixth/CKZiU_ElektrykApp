@@ -13,9 +13,10 @@ public class CalendarEvent {
     @SerializedName("extra_info")
     private String extraInfo;
 
-    public CalendarEvent(String dateRaw, String description) {
+    public CalendarEvent(String dateRaw, String description, String extraInfo) {
         this.dateRaw = dateRaw;
         this.description = description;
+        this.extraInfo = extraInfo;
     }
 
 

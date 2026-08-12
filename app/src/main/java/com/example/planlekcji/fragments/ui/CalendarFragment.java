@@ -65,11 +65,15 @@ public class CalendarFragment extends Fragment {
         for (CalendarSection section : sections) {
             View sectionCard = inflater.inflate(R.layout.calendar_section_card, calendarContainer, false);
             TextView textViewSectionName = sectionCard.findViewById(R.id.textView_sectionName);
+            TextView textViewSectionExtraInfo = sectionCard.findViewById(R.id.textView_sectionExtraInfo);
             LinearLayout layoutSectionEvents = sectionCard.findViewById(R.id.layout_sectionEvents);
 
             textViewSectionName.setText(section.name());
 
             List<CalendarEvent> events = section.events();
+            StringBuilder extraInfoBuilder = new StringBuilder();
+            List<String> addedExtraInfos = new java.util.ArrayList<>();
+
             if (events != null && !events.isEmpty()) {
                 for (CalendarEvent event : events) {
                     View eventItem = inflater.inflate(R.layout.calendar_event_item, layoutSectionEvents, false);
@@ -93,7 +97,25 @@ public class CalendarFragment extends Fragment {
                     }
 
                     layoutSectionEvents.addView(eventItem);
+
+                    if (event.extraInfo() != null && !event.extraInfo().trim().isEmpty()) {
+                        String extra = event.extraInfo().trim();
+                        if (!addedExtraInfos.contains(extra)) {
+                            addedExtraInfos.add(extra);
+                            if (extraInfoBuilder.length() > 0) {
+                                extraInfoBuilder.append("\n");
+                            }
+                            extraInfoBuilder.append(extra);
+                        }
+                    }
                 }
+            }
+
+            if (extraInfoBuilder.length() > 0) {
+                textViewSectionExtraInfo.setText(extraInfoBuilder.toString());
+                textViewSectionExtraInfo.setVisibility(View.VISIBLE);
+            } else {
+                textViewSectionExtraInfo.setVisibility(View.GONE);
             }
 
             calendarContainer.addView(sectionCard);
