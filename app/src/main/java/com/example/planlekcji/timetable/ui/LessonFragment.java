@@ -11,9 +11,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import android.graphics.Typeface;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import com.google.android.material.card.MaterialCardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
@@ -161,11 +163,12 @@ public class LessonFragment extends Fragment {
         }
 
         for (Integer i : lessonData.keySet()) {
-            CardView cardView = (CardView) inflater.inflate(R.layout.lesson_card, layout, false);
+            MaterialCardView cardView = (MaterialCardView) inflater.inflate(R.layout.lesson_card, layout, false);
 
             TextView lessonHoursText = cardView.findViewById(R.id.textViewLessonHours);
             TextView viewLessonData = cardView.findViewById(R.id.textViewLessonData);
             TextView lessonNumber = cardView.findViewById(R.id.textViewLessonNumber);
+            View divider = cardView.findViewById(R.id.lessonCard_divider);
 
             String timeRangeString = lessonTimeMap.getOrDefault(i, "");
 
@@ -175,11 +178,27 @@ public class LessonFragment extends Fragment {
 
             // Highlight current lesson
             if (currentLessonIndex == i) {
-                int color = ContextCompat.getColor(requireContext(), R.color.primaryDark);
-                cardView.setCardBackgroundColor(color);
-                lessonHoursText.setTextColor(Color.BLACK);
-                viewLessonData.setTextColor(Color.BLACK);
-                lessonNumber.setTextColor(Color.BLACK);
+                int goldColor = ContextCompat.getColor(requireContext(), R.color.primaryDark);
+                int darkGoldBg = Color.parseColor("#2E250A");
+                int strokeColor = Color.parseColor("#99FFC107");
+                int strokeWidthPx = (int) (1.5f * getResources().getDisplayMetrics().density);
+
+                cardView.setCardBackgroundColor(darkGoldBg);
+                cardView.setStrokeColor(strokeColor);
+                cardView.setStrokeWidth(strokeWidthPx);
+
+                lessonNumber.setTextColor(goldColor);
+                lessonNumber.setTypeface(null, Typeface.BOLD);
+
+                lessonHoursText.setTextColor(Color.parseColor("#FFD54F"));
+                lessonHoursText.setAlpha(1.0f);
+
+                viewLessonData.setTextColor(Color.WHITE);
+                viewLessonData.setTypeface(null, Typeface.BOLD);
+
+                if (divider != null) {
+                    divider.setBackgroundColor(strokeColor);
+                }
             }
 
             layout.addView(cardView);
