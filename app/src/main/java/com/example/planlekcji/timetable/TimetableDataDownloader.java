@@ -45,11 +45,9 @@ public class TimetableDataDownloader implements Runnable {
             return;
         }
 
-        Log.d("token: ", token);
         TimetableService timetableService = client.getTimetableService(schoolEntryType);
 
         Map<DayOfWeek, List<Lesson>> map = timetableService.getTimetable(token);
-        if (map != null) Log.d("timetable_map", map.toString());
 
         listener.onDownloadComplete(map);
     }
