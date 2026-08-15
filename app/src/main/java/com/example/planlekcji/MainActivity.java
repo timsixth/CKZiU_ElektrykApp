@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Initialize the application context for other functions.
-        appContext = this;
+        appContext = getApplicationContext();
 
         // Obtain the MainViewModel instance to update data on settings changes
         mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
