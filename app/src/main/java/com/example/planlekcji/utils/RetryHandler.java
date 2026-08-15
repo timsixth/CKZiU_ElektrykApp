@@ -9,6 +9,7 @@ import com.example.planlekcji.R;
 
 public class RetryHandler {
     private static final long RETRY_DELAY_MS = 10000;
+    private static final int MAX_RETRIES = 3;
     private final Runnable retryRunnable;
     private int retriesNumber = 0;
 
@@ -17,6 +18,10 @@ public class RetryHandler {
     }
 
     public void handleRetry() {
+        if (retriesNumber >= MAX_RETRIES) {
+            return;
+        }
+
         scheduleRetry();
 
         Context context = MainActivity.getContext();
