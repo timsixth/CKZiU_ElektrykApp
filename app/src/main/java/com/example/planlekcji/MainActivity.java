@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
         viewPager2_appContent.setAdapter(adapter);
-        viewPager2_appContent.setOffscreenPageLimit(3);
+        viewPager2_appContent.setOffscreenPageLimit(4);
         viewPager2_appContent.setUserInputEnabled(true);
 
         // Connect the TabLayout (navigation) with the ViewPager2 (app content)

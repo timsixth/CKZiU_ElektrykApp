@@ -42,9 +42,6 @@ public class SettingsFragment extends Fragment {
         // Fetch data relevant to settings.
         getData();
 
-        // Initialize spinners and populate them with data.
-        initSpinners();
-
         return view;
     }
 
@@ -178,20 +175,24 @@ public class SettingsFragment extends Fragment {
 
     private void getData() {
         SchoolEntriesDownloader spinnersDataDownloader = new SchoolEntriesDownloader(mainViewModel.getClient());
-        Thread thread = new Thread(spinnersDataDownloader);
-        thread.start();
+        new Thread(() -> {
+            spinnersDataDownloader.run();
 
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (!isAdded() || view == null) return;
 
-        classesSchoolEntries = spinnersDataDownloader.getClassesSchoolEntries();
-        teachersSchoolEntries = spinnersDataDownloader.getTeachersSchoolEntries();
-        classroomsSchoolEntries = spinnersDataDownloader.getClassroomsSchoolEntries();
+                    classesSchoolEntries = spinnersDataDownloader.getClassesSchoolEntries();
+                    teachersSchoolEntries = spinnersDataDownloader.getTeachersSchoolEntries();
+                    classroomsSchoolEntries = spinnersDataDownloader.getClassroomsSchoolEntries();
 
-        ensurePreviewDefaults();
+                    ensurePreviewDefaults();
+
+                    // Initialize spinners and populate them with data.
+                    initSpinners();
+                });
+            }
+        }).start();
     }
 
     private void ensurePreviewDefaults() {
