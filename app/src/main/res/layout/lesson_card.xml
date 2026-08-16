@@ -17,16 +17,19 @@
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="6dp">
+        android:paddingStart="6dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="8dp">
 
         <!-- LessonNumber -->
         <TextView
             android:id="@+id/textViewLessonNumber"
-            android:layout_width="wrap_content"
+            android:layout_width="46dp"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="6dp"
             android:text="@string/lessonCard_placeholder_lessonNumber"
             android:textAlignment="center"
             android:textColor="@color/fontColor"
@@ -40,6 +43,8 @@
             android:id="@+id/lessonCard_divider"
             android:layout_width="1dp"
             android:layout_height="0dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
             android:background="?android:attr/listDivider"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/textViewLessonHours"
@@ -50,33 +55,43 @@
             android:id="@+id/textViewLessonHours"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:alpha="0.8"
-            android:gravity="center"
-            android:paddingTop="4dp"
+            android:layout_marginStart="14dp"
+            android:alpha="0.85"
+            android:gravity="start"
+            android:paddingTop="0dp"
             android:text="@string/lessonCard_placeholder_lessonTimeRange"
             android:textColor="@color/fontColor"
+            android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@id/textViewLessonNumber"
+            app:layout_constraintStart_toEndOf="@id/lessonCard_divider"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- LessonData -->
-        <TextView
-            android:id="@+id/textViewLessonData"
+        <!-- Lessons Container -->
+        <LinearLayout
+            android:id="@+id/layout_lessonsContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:paddingStart="6dp"
-            android:paddingTop="0dp"
-            android:paddingEnd="6dp"
-            android:paddingBottom="8dp"
-            android:textAlignment="center"
-            android:textColor="@color/fontColor"
-            android:textSize="20sp"
+            android:layout_marginStart="14dp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="2dp"
+            android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/textViewLessonHours"
-            app:layout_constraintTop_toBottomOf="@id/textViewLessonHours" />
+            app:layout_constraintStart_toEndOf="@id/lessonCard_divider"
+            app:layout_constraintTop_toBottomOf="@id/textViewLessonHours">
+
+            <TextView
+                android:id="@+id/textViewLessonData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="2dp"
+                android:paddingBottom="4dp"
+                android:textAlignment="center"
+                android:textColor="@color/fontColor"
+                android:textSize="18sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
