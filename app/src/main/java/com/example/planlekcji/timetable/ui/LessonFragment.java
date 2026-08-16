@@ -23,6 +23,8 @@ import androidx.fragment.app.Fragment;
 
 import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.R;
+import com.example.planlekcji.utils.EmptyStateHelper;
+import com.example.planlekcji.utils.EmptyStateType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.GroupLesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
@@ -103,22 +105,7 @@ public class LessonFragment extends Fragment {
 
         // No lessons scheduled for this day
         if (lessonDataMap.isEmpty()) {
-            CardView cardView = (CardView) inflater.inflate(R.layout.lesson_card, layout, false);
-            TextView viewLessonData = cardView.findViewById(R.id.textViewLessonData);
-            TextView lessonHoursText = cardView.findViewById(R.id.textViewLessonHours);
-            TextView lessonNumber = cardView.findViewById(R.id.textViewLessonNumber);
-            View divider = cardView.findViewById(R.id.lessonCard_divider);
-
-            // Hide unnecessary components when there are no classes
-            lessonHoursText.setVisibility(View.GONE);
-            lessonNumber.setVisibility(View.GONE);
-            divider.setVisibility(View.GONE);
-
-            // Display info
-            viewLessonData.setVisibility(View.VISIBLE);
-            viewLessonData.setText(R.string.no_lessons_today);
-
-            layout.addView(cardView);
+            layout.addView(EmptyStateHelper.create(inflater, layout, EmptyStateType.DAY_OFF));
             return;
         }
 

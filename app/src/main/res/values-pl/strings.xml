@@ -40,4 +40,6 @@
     <string name="empty_state_articles_description">Aktualnie brak dostępnych artykułów</string>
     <string name="empty_state_calendar_title">Brak wydarzeń</string>
     <string name="empty_state_calendar_description">Aktualnie brak dostępnych wydarzeń w kalendarzu</string>
+    <string name="empty_state_day_title">Brak zajęć</string>
+    <string name="empty_state_day_description">Brak zaplanowanych zajęć w tym dniu</string>
 </resources>

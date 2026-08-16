@@ -22,6 +22,11 @@ public enum EmptyStateType {
             R.drawable.calendar_icon,
             R.string.empty_state_calendar_title,
             R.string.empty_state_calendar_description
+    ),
+    DAY_OFF(
+            R.drawable.timetable_icon,
+            R.string.empty_state_day_title,
+            R.string.empty_state_day_description
     );
 
     private final int iconResId;
