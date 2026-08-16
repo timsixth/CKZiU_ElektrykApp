@@ -15,6 +15,8 @@ import android.widget.TextView;
 import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
+import com.example.planlekcji.utils.EmptyStateHelper;
+import com.example.planlekcji.utils.EmptyStateType;
 import com.example.planlekcji.ckziu_elektryk.client.replacements.Replacement;
 import com.example.planlekcji.ckziu_elektryk.client.replacements.ReplacementChange;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
@@ -39,6 +41,7 @@ public class ReplacementsFragment extends Fragment {
         this.layout = view.findViewById(R.id.linearLayout_replacements);
 
         observeAndHandleReplacementsLiveData();
+        layout.addView(EmptyStateHelper.create(inflater, layout, EmptyStateType.REPLACEMENTS));
         this.mainViewModel.fetchReplacements();
 
         return view;
@@ -56,8 +59,7 @@ public class ReplacementsFragment extends Fragment {
         layout.removeAllViews();
 
         if(replacements == null || replacements.isEmpty() || areReplacementsEmpty()) {
-            View emptyView = inflater.inflate(R.layout.replacement_empty_state, layout, false);
-            layout.addView(emptyView);
+            layout.addView(EmptyStateHelper.create(inflater, layout, EmptyStateType.REPLACEMENTS));
 
             return;
         }

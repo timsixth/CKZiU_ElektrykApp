@@ -14,6 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
+import com.example.planlekcji.utils.EmptyStateHelper;
+import com.example.planlekcji.utils.EmptyStateType;
 import com.example.planlekcji.ckziu_elektryk.client.calendar.Calendar;
 import com.example.planlekcji.ckziu_elektryk.client.calendar.CalendarEvent;
 import com.example.planlekcji.ckziu_elektryk.client.calendar.CalendarSection;
@@ -27,7 +29,6 @@ public class CalendarFragment extends Fragment {
 
     private MainViewModel mainViewModel;
     private LinearLayout calendarContainer;
-    private TextView textViewNoCalendarEvents;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -35,7 +36,8 @@ public class CalendarFragment extends Fragment {
 
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         calendarContainer = view.findViewById(R.id.linearLayout_calendar);
-        textViewNoCalendarEvents = view.findViewById(R.id.textView_noCalendarEvents);
+
+        calendarContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), calendarContainer, EmptyStateType.CALENDAR));
 
         observeCalendarData();
         mainViewModel.fetchCalendar();
@@ -53,12 +55,10 @@ public class CalendarFragment extends Fragment {
         calendarContainer.removeAllViews();
 
         if (calendar == null || calendar.sections() == null || calendar.sections().isEmpty()) {
-            textViewNoCalendarEvents.setVisibility(View.VISIBLE);
-            calendarContainer.addView(textViewNoCalendarEvents);
+            calendarContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), calendarContainer, EmptyStateType.CALENDAR));
             return;
         }
 
-        textViewNoCalendarEvents.setVisibility(View.GONE);
         LayoutInflater inflater = LayoutInflater.from(requireContext());
 
         List<CalendarSection> sections = calendar.sections();

@@ -20,29 +20,29 @@
         app:strokeWidth="1dp">
 
         <ImageView
+            android:id="@+id/imageView_emptyIcon"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
-            android:contentDescription="@string/no_replacements"
-            android:src="@drawable/replacement_icon"
+            android:contentDescription="@string/empty_state_icon_description"
             app:tint="#FFC107" />
 
     </com.google.android.material.card.MaterialCardView>
 
     <TextView
+        android:id="@+id/textView_emptyTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="6dp"
-        android:text="@string/no_replacements"
         android:textColor="#E0E0E0"
         android:textSize="20sp"
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/textView_emptyDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/no_replacements_description"
         android:textColor="#888888"
         android:textSize="14sp" />
 

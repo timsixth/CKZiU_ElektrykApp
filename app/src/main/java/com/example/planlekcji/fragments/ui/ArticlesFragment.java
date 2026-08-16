@@ -23,6 +23,8 @@ import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
 import com.example.planlekcji.ckziu_elektryk.client.article.Article;
 import com.example.planlekcji.ckziu_elektryk.client.article.PhotoSize;
+import com.example.planlekcji.utils.EmptyStateHelper;
+import com.example.planlekcji.utils.EmptyStateType;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.card.MaterialCardView;
@@ -38,7 +40,6 @@ import java.util.stream.Collectors;
 public class ArticlesFragment extends Fragment {
     private MainViewModel mainViewModel;
     private LinearLayout articlesContainer;
-    private TextView textViewNoArticles;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
 
     @Override
@@ -47,7 +48,8 @@ public class ArticlesFragment extends Fragment {
 
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         articlesContainer = view.findViewById(R.id.linearLayout_articles);
-        textViewNoArticles = view.findViewById(R.id.textView_noArticles);
+
+        articlesContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), articlesContainer, EmptyStateType.ARTICLES));
 
         observeArticlesData();
         mainViewModel.fetchArticles();
@@ -63,12 +65,10 @@ public class ArticlesFragment extends Fragment {
         articlesContainer.removeAllViews();
 
         if (articles == null || articles.isEmpty()) {
-            textViewNoArticles.setVisibility(View.VISIBLE);
-            articlesContainer.addView(textViewNoArticles);
+            articlesContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), articlesContainer, EmptyStateType.ARTICLES));
             return;
         }
 
-        textViewNoArticles.setVisibility(View.GONE);
         LayoutInflater inflater = LayoutInflater.from(requireContext());
 
         for (Article article : articles) {

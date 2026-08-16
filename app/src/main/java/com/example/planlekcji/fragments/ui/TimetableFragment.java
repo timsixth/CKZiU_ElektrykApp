@@ -11,9 +11,12 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
+import com.example.planlekcji.utils.EmptyStateHelper;
+import com.example.planlekcji.utils.EmptyStateType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 import com.example.planlekcji.timetable.ui.Adapter;
+import android.widget.LinearLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -28,6 +31,7 @@ public class TimetableFragment extends Fragment {
 
     private Map<DayOfWeek, List<Lesson>> timetableMap;
     private View view;
+    private LinearLayout emptyStateContainer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -43,6 +47,10 @@ public class TimetableFragment extends Fragment {
         viewPager_timetable.setOffscreenPageLimit(5);
         viewPager_timetable.setUserInputEnabled(true);
 
+        emptyStateContainer = view.findViewById(R.id.linearLayout_emptyState);
+
+        showEmptyState();
+
         setAdapterToViewPager();
 
         return view;
@@ -57,11 +65,34 @@ public class TimetableFragment extends Fragment {
         mainViewModel.getTimetableLiveData().observe(getViewLifecycleOwner(), newTimetableMap -> {
             timetableMap = newTimetableMap;
 
+            if (timetableMap == null || timetableMap.isEmpty()) {
+                showEmptyState();
+                return;
+            }
+
+            hideEmptyState();
             setAdapterToViewPager();
 
             setHeadersToTabLayout();
             setCurrentDay();
         });
+    }
+
+    private void showEmptyState() {
+        viewPager_timetable.setVisibility(View.GONE);
+        view.findViewById(R.id.tabLayout_dayNames).setVisibility(View.GONE);
+        view.findViewById(R.id.nestedScrollableHost).setVisibility(View.GONE);
+        emptyStateContainer.removeAllViews();
+        emptyStateContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), emptyStateContainer, EmptyStateType.TIMETABLE));
+        emptyStateContainer.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEmptyState() {
+        emptyStateContainer.setVisibility(View.GONE);
+        emptyStateContainer.removeAllViews();
+        viewPager_timetable.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.tabLayout_dayNames).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.nestedScrollableHost).setVisibility(View.VISIBLE);
     }
 
     private void setHeadersToTabLayout() {

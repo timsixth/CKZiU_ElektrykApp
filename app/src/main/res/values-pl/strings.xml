@@ -33,4 +33,11 @@
     <string name="toastErrorMessage_noInternetConnectionRetry">Brak połączenia z internetem. Ponawianie połączenia.</string>
     <string name="no_lessons_today">Brak zajęć w tym dniu</string>
     <string name="toast_errorMessage">Wystąpił błąd. Spróbuj ponownie później.</string>
+    <string name="empty_state_icon_description">Ikona pustego stanu</string>
+    <string name="empty_state_timetable_title">Brak planu lekcji</string>
+    <string name="empty_state_timetable_description">Dane planu lekcji są obecnie niedostępne</string>
+    <string name="empty_state_articles_title">Brak artykułów</string>
+    <string name="empty_state_articles_description">Aktualnie brak dostępnych artykułów</string>
+    <string name="empty_state_calendar_title">Brak wydarzeń</string>
+    <string name="empty_state_calendar_description">Aktualnie brak dostępnych wydarzeń w kalendarzu</string>
 </resources>

@@ -41,4 +41,11 @@
     <string name="lessonCard_placeholder_lessonTimeRange" translatable="false">08:00 - 08:45</string>
     <string name="no_lessons_today">No lessons scheduled for this day</string>
     <string name="toast_errorMessage">An error occurred. Please try again later.</string>
+    <string name="empty_state_icon_description">Empty state icon</string>
+    <string name="empty_state_timetable_title">No timetable</string>
+    <string name="empty_state_timetable_description">Timetable data is not available at the moment</string>
+    <string name="empty_state_articles_title">No articles</string>
+    <string name="empty_state_articles_description">No articles are available at the moment</string>
+    <string name="empty_state_calendar_title">No events</string>
+    <string name="empty_state_calendar_description">No calendar events are available at the moment</string>
 </resources>
