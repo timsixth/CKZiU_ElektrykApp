@@ -29,6 +29,7 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.GroupLesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.LessonDetails;
+import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SchoolClass;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SingleLesson;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 
@@ -203,25 +204,21 @@ public class LessonFragment extends Fragment {
     }
 
     private String getSubjectText(LessonDetails lessonDetails) {
-        SchoolEntryType timetableType = MainActivity.getTimetableType();
-        String subjectName = lessonDetails.getSubject().name();
-
-        if (timetableType == SchoolEntryType.TEACHERS) {
-            String schoolClassName = lessonDetails.getSchoolClass().isPresent()
-                    ? lessonDetails.getSchoolClass().get().shortcut() : "";
-            if (!schoolClassName.isEmpty()) {
-                return schoolClassName + " " + subjectName;
-            }
-        }
-        return subjectName;
+        return lessonDetails.getSubject().name();
     }
 
     private String getMetaText(LessonDetails lessonDetails) {
         SchoolEntryType timetableType = MainActivity.getTimetableType();
         String classroomName = lessonDetails.getClassroom();
         String teacherName = lessonDetails.getTeacher();
-        String schoolClassName = lessonDetails.getSchoolClass().isPresent()
-                ? lessonDetails.getSchoolClass().get().shortcut() : "";
+        String schoolClassName = "";
+        if (lessonDetails.getSchoolClasses() != null && !lessonDetails.getSchoolClasses().isEmpty()) {
+            schoolClassName = lessonDetails.getSchoolClasses().stream()
+                    .map(SchoolClass::shortcut)
+                    .collect(Collectors.joining(", "));
+        } else if (lessonDetails.getSchoolClass().isPresent()) {
+            schoolClassName = lessonDetails.getSchoolClass().get().shortcut();
+        }
 
         if (timetableType == SchoolEntryType.CLASSES) {
             StringBuilder sb = new StringBuilder();
@@ -232,7 +229,13 @@ public class LessonFragment extends Fragment {
             }
             return sb.toString();
         } else if (timetableType == SchoolEntryType.TEACHERS) {
-            return classroomName;
+            StringBuilder sb = new StringBuilder();
+            if (!schoolClassName.isEmpty()) sb.append(schoolClassName);
+            if (!classroomName.isEmpty()) {
+                if (sb.length() > 0) sb.append(" · ");
+                sb.append(classroomName);
+            }
+            return sb.toString();
         } else {
             StringBuilder sb = new StringBuilder();
             if (!schoolClassName.isEmpty()) sb.append(schoolClassName);
