@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "619385353096",
+    "project_id": "elektrykapp-ddd7b",
+    "storage_bucket": "elektrykapp-ddd7b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619385353096:android:c154f33ffffed55b77403d",
+        "android_client_info": {
+          "package_name": "pl.rychter.szymon.planlekcji"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-J07e-m0-k75rVs9cf0ZkHWns5wMzhYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
