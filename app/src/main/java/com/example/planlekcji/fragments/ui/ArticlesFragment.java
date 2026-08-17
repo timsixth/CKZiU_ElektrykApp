@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
+import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
 import com.example.planlekcji.ckziu_elektryk.client.article.Article;
@@ -117,6 +118,16 @@ public class ArticlesFragment extends Fragment {
         TextView textViewContent = dialogView.findViewById(R.id.textView_detailContent);
         HorizontalScrollView galleryScrollView = dialogView.findViewById(R.id.scrollView_detailGallery);
         LinearLayout galleryLayout = dialogView.findViewById(R.id.layout_detailGallery);
+        View layoutOfflineGallery = dialogView.findViewById(R.id.layout_detailGalleryOffline);
+
+        boolean isInitiallyOnline = true;
+        if (getActivity() instanceof MainActivity) {
+            isInitiallyOnline = ((MainActivity) getActivity()).isOnline();
+        }
+
+        if (!isInitiallyOnline && layoutOfflineGallery != null) {
+            layoutOfflineGallery.setVisibility(View.VISIBLE);
+        }
 
         textViewTitle.setText(article.getTitle());
 
@@ -172,6 +183,10 @@ public class ArticlesFragment extends Fragment {
                             textViewContent.setText(Html.fromHtml(fullArticle.getContent(), Html.FROM_HTML_MODE_LEGACY));
                         }
 
+                        if (layoutOfflineGallery != null) {
+                            layoutOfflineGallery.setVisibility(View.GONE);
+                        }
+
                         if (!combinedUrls.isEmpty()) {
                             populateGalleryThumbnails(galleryScrollView, galleryLayout, combinedUrls);
                             if (article.getHeaderImageUrl() != null) {
@@ -179,8 +194,22 @@ public class ArticlesFragment extends Fragment {
                             }
                         }
                     });
+                } else {
+                    requireActivity().runOnUiThread(() -> {
+                        if (!isAdded()) return;
+                        if (layoutOfflineGallery != null) {
+                            layoutOfflineGallery.setVisibility(View.VISIBLE);
+                        }
+                    });
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return;
+                    if (layoutOfflineGallery != null) {
+                        layoutOfflineGallery.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
         }).start();
 
         dialog.setContentView(dialogView);
