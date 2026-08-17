@@ -60,19 +60,23 @@ public abstract class AbstractTimetableService extends ClientService implements 
     }
 
     @Override
-    public Map<DayOfWeek, List<Lesson>> getTimetable(String name) {
+    public JsonObject getTimetableJsonObject(String name) {
         ParamValidator.checkNotNullAndNotEmpty(name);
 
         APIResponseCall apiResponseCall = getData(oneSchoolEntryEndpoint
                 .withPlaceholders(Map.of("{school_entry_shortcut}", name)));
 
-        if (!apiResponseCall.hasResponse()) return Collections.emptyMap();
+        if (!apiResponseCall.hasResponse()) return null;
 
         return apiResponseCall.error(handleError())
-                .success(successResponse -> {
-                    JsonObject jsonObject = successResponse.getJsonElement().getAsJsonObject();
-                    return parseTimetable(jsonObject);
-                });
+                .success(successResponse -> successResponse.getJsonElement().getAsJsonObject());
+    }
+
+    @Override
+    public Map<DayOfWeek, List<Lesson>> getTimetable(String name) {
+        JsonObject jsonObject = getTimetableJsonObject(name);
+        if (jsonObject == null) return Collections.emptyMap();
+        return parseTimetable(jsonObject);
     }
 
     public static Map<DayOfWeek, List<Lesson>> parseTimetable(JsonObject jsonObject) {

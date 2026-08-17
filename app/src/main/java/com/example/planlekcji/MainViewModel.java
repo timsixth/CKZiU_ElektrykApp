@@ -111,16 +111,10 @@ public class MainViewModel extends ViewModel {
     private void startTimetableDownload() {
         isLoadingTimetable.postValue(true);
         TimetableDataDownloader downloader = new TimetableDataDownloader(client, new TimetableDownloadCompleteListener() {
-            private boolean networkResponseReceived = false;
-
             @Override
             public void onDownloadComplete(Map<DayOfWeek, List<Lesson>> timetableMap) {
                 timetable.postValue(timetableMap);
-                if (networkResponseReceived) {
-                    isLoadingTimetable.postValue(false);
-                } else {
-                    networkResponseReceived = true;
-                }
+                isLoadingTimetable.postValue(false);
             }
 
             @Override
@@ -135,16 +129,10 @@ public class MainViewModel extends ViewModel {
     private void startArticlesDownload() {
         isLoadingArticles.postValue(true);
         ArticleDataDownloader downloader = new ArticleDataDownloader(client, new ArticlesDownloadCompleteListener() {
-            private boolean networkResponseReceived = false;
-
             @Override
             public void onDownloadComplete(List<Article> articleList) {
                 articles.postValue(articleList);
-                if (networkResponseReceived) {
-                    isLoadingArticles.postValue(false);
-                } else {
-                    networkResponseReceived = true;
-                }
+                isLoadingArticles.postValue(false);
             }
 
             @Override
@@ -159,16 +147,10 @@ public class MainViewModel extends ViewModel {
     private void startCalendarDownload() {
         isLoadingCalendar.postValue(true);
         CalendarDataDownloader downloader = new CalendarDataDownloader(client, new CalendarDownloadCompleteListener() {
-            private boolean networkResponseReceived = false;
-
             @Override
             public void onDownloadComplete(Calendar calendarData) {
                 calendar.postValue(calendarData);
-                if (networkResponseReceived) {
-                    isLoadingCalendar.postValue(false);
-                } else {
-                    networkResponseReceived = true;
-                }
+                isLoadingCalendar.postValue(false);
             }
 
             @Override
