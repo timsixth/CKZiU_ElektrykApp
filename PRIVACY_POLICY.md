@@ -24,7 +24,9 @@ You can stop all collection of information by the Application easily by uninstal
 
 ### Children’s Privacy
 The Application is not used to knowingly solicit data from or market to children under the age of 13.
-The Service Provider does not knowingly collect personally identifiable information from children. The Service Provider encourages parents and legal guardians to monitor their children's Internet usage. If you have reason to believe that a child has provided personally identifiable information to the Service Provider through the Application, please contact the Service Provider at `rychter47&#64;gmail.com` so that necessary actions can be taken.
+The Service Provider does not knowingly collect personally identifiable information from children. 
+The Service Provider encourages parents and legal guardians to monitor their children's Internet usage. 
+If you have reason to believe that a child has provided personally identifiable information to the Service Provider through the Application, please contact the Service Provider at `rychter47@gmail.com` so that necessary actions can be taken.
 
 ### Security
 The Service Provider is concerned about safeguarding the confidentiality of your information. However, since the Application does not collect any personal information, there is no risk of your data being accessed by unauthorized individuals.
