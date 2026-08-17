@@ -42,4 +42,8 @@
     <string name="empty_state_calendar_description">Aktualnie brak dostępnych wydarzeń w kalendarzu</string>
     <string name="empty_state_day_title">Brak zajęć</string>
     <string name="empty_state_day_description">Brak zaplanowanych zajęć w tym dniu</string>
+    <string name="offline_mode">Tryb offline</string>
+    <string name="gallery_unavailable_offline">Galeria zdjęć jest niedostępna w trybie offline</string>
+    <string name="settings_offline_notice_title">Ustawienia niedostępne offline</string>
+    <string name="settings_offline_notice_description">Zmiana planu lekcji lub typu planu jest niedostępna w trybie offline. Połącz się z internetem, aby zmienić te ustawienia.</string>
 </resources>

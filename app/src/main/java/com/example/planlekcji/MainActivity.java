@@ -17,17 +17,15 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
-import com.example.planlekcji.ckziu_elektryk.client.Config;
 import com.example.planlekcji.fragments.model.ViewPagerAdapter;
-import com.example.planlekcji.utils.ToastUtils;
-
+import com.example.planlekcji.utils.NetworkMonitor;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-
 
 public class MainActivity extends AppCompatActivity {
     private static Context appContext;
     private MainViewModel mainViewModel;
+    private NetworkMonitor networkMonitor;
 
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
@@ -40,12 +38,6 @@ public class MainActivity extends AppCompatActivity {
         // Obtain the MainViewModel instance to update data on settings changes
         mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
-        // Check for internet connection; exit the app if not connected.
-        if (!Config.getOrCreateConfig().isPreviewMode() && !isOnline()) {
-            String errorMessage = getString(R.string.toastErrorMessage_noInternetConnection);
-            ToastUtils.showToast(this, errorMessage, true);
-        }
-
         // Lock the orientation of the screen to portrait mode.
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -54,6 +46,19 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the content view for the main activity.
         setContentView(R.layout.activity_main);
+
+        // Network monitoring and offline banner
+        networkMonitor = new NetworkMonitor(this);
+        View layoutOfflineBanner = findViewById(R.id.layout_offlineBanner);
+
+        networkMonitor.getIsOnlineLiveData().observe(this, isOnline -> {
+            if (layoutOfflineBanner != null) {
+                layoutOfflineBanner.setVisibility(Boolean.TRUE.equals(isOnline) ? View.GONE : View.VISIBLE);
+            }
+            if (Boolean.TRUE.equals(isOnline)) {
+                mainViewModel.fetchData();
+            }
+        });
 
         // Progress bar
         ProgressBar progressBar = findViewById(R.id.progressBar);
@@ -109,16 +114,29 @@ public class MainActivity extends AppCompatActivity {
             }
         }).attach();
 
-        // Add listener to refresh data upon exiting settings
+        // Add listener to refresh data upon exiting settings if settings changed
         tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            private SchoolEntryType lastType;
+            private String lastToken;
+
             @Override
-            public void onTabSelected(TabLayout.Tab tab) {}
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
+                    lastType = getTimetableType();
+                    lastToken = getToken(lastType);
+                }
+            }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-                // Update data upon exiting settings
-                if(tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
-                    mainViewModel.fetchData();
+                if (tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
+                    SchoolEntryType currentType = getTimetableType();
+                    String currentToken = getToken(currentType);
+
+                    if (currentType != lastType || !java.util.Objects.equals(currentToken, lastToken)) {
+                        mainViewModel.fetchTimetable();
+                        mainViewModel.fetchReplacements();
+                    }
                 }
             }
 
@@ -127,11 +145,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (networkMonitor != null) {
+            networkMonitor.unregisterCallback();
+        }
+    }
+
     public static Context getContext() {
         return appContext;
     }
 
+    public NetworkMonitor getNetworkMonitor() {
+        return networkMonitor;
+    }
+
     public boolean isOnline() {
+        if (networkMonitor != null) {
+            return networkMonitor.isCurrentlyOnline();
+        }
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
 

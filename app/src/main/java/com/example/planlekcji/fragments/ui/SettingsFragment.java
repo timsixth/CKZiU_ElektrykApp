@@ -39,10 +39,53 @@ public class SettingsFragment extends Fragment {
         // Initialize SharedPreferences for storing application settings.
         sharedPref = MainActivity.getContext().getSharedPreferences("sharedPrefs", 0);
 
+        if (getActivity() instanceof MainActivity) {
+            MainActivity activity = (MainActivity) getActivity();
+            if (activity.getNetworkMonitor() != null) {
+                activity.getNetworkMonitor().getIsOnlineLiveData().observe(getViewLifecycleOwner(), this::updateOnlineState);
+            }
+        }
+
         // Fetch data relevant to settings.
         getData();
 
         return view;
+    }
+
+    private void updateOnlineState(boolean isOnline) {
+        if (view == null) return;
+
+        View cardNotice = view.findViewById(R.id.card_settingsOfflineNotice);
+        View cardTimetableType = view.findViewById(R.id.card_timetableType);
+        View cardSchoolEntries = view.findViewById(R.id.card_schoolEntries);
+
+        Spinner spinnerUserType = view.findViewById(R.id.spinnerUserType);
+        Spinner spinnerClassTokens = view.findViewById(R.id.spinnerClassTokens);
+        Spinner spinnerTeacherTokens = view.findViewById(R.id.spinnerTeacherTokens);
+        Spinner spinnerClassroomTokens = view.findViewById(R.id.spinnerClassroomTokens);
+
+        View layoutTimetableType = view.findViewById(R.id.layout_timetableType);
+        View layoutSelectClass = view.findViewById(R.id.layout_selectClass);
+        View layoutSelectTeacher = view.findViewById(R.id.layout_selectTeacher);
+        View layoutSelectClassroom = view.findViewById(R.id.layout_selectClassroom);
+
+        if (cardNotice != null) {
+            cardNotice.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+        }
+
+        float alpha = isOnline ? 1.0f : 0.45f;
+        if (cardTimetableType != null) cardTimetableType.setAlpha(alpha);
+        if (cardSchoolEntries != null) cardSchoolEntries.setAlpha(alpha);
+
+        if (spinnerUserType != null) spinnerUserType.setEnabled(isOnline);
+        if (spinnerClassTokens != null) spinnerClassTokens.setEnabled(isOnline);
+        if (spinnerTeacherTokens != null) spinnerTeacherTokens.setEnabled(isOnline);
+        if (spinnerClassroomTokens != null) spinnerClassroomTokens.setEnabled(isOnline);
+
+        if (layoutTimetableType != null) layoutTimetableType.setEnabled(isOnline);
+        if (layoutSelectClass != null) layoutSelectClass.setEnabled(isOnline);
+        if (layoutSelectTeacher != null) layoutSelectTeacher.setEnabled(isOnline);
+        if (layoutSelectClassroom != null) layoutSelectClassroom.setEnabled(isOnline);
     }
 
     private void initSpinners() {
@@ -62,12 +105,20 @@ public class SettingsFragment extends Fragment {
         setupRowClickListener(R.id.layout_selectClass, spinnerClassTokens);
         setupRowClickListener(R.id.layout_selectTeacher, spinnerTeacherTokens);
         setupRowClickListener(R.id.layout_selectClassroom, spinnerClassroomTokens);
+
+        if (getActivity() instanceof MainActivity) {
+            updateOnlineState(((MainActivity) getActivity()).isOnline());
+        }
     }
 
     private void setupRowClickListener(int rowId, Spinner spinner) {
         View rowView = view.findViewById(rowId);
         if (rowView != null && spinner != null) {
-            rowView.setOnClickListener(v -> spinner.performClick());
+            rowView.setOnClickListener(v -> {
+                if (rowView.isEnabled() && spinner.isEnabled()) {
+                    spinner.performClick();
+                }
+            });
         }
     }
 

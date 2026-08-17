@@ -28,7 +28,7 @@ public class ArticleServiceImpl extends ClientService implements ArticleService 
                 .withPlaceholders(Map.of("{page}", String.valueOf(page))));
 
         if (!apiResponseCall.hasResponse())
-            return Page.empty();
+            return null;
 
         return apiResponseCall.error(handleError())
                 .success(successResponse -> {

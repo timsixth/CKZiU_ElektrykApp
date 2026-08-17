@@ -70,29 +70,34 @@ public abstract class AbstractTimetableService extends ClientService implements 
 
         return apiResponseCall.error(handleError())
                 .success(successResponse -> {
-                    Map<DayOfWeek, List<Lesson>> timetable = new LinkedHashMap<>();
                     JsonObject jsonObject = successResponse.getJsonElement().getAsJsonObject();
-
-                    for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
-                        String shortcut = dayOfWeek.name();
-
-                        if (!jsonObject.has(shortcut)) continue;
-
-                        JsonArray jsonArray = jsonObject.get(shortcut).getAsJsonArray();
-
-                        if (jsonArray.isEmpty()) {
-                            timetable.put(dayOfWeek, Collections.emptyList());
-                        }
-
-                        List<Lesson> lessons = jsonObject.get(shortcut).getAsJsonArray().asList()
-                                .stream()
-                                .map(jsonElement -> LessonFactory.createLesson(jsonElement.getAsJsonObject()))
-                                .collect(Collectors.toList());
-
-                        timetable.put(dayOfWeek, lessons);
-                    }
-
-                    return timetable;
+                    return parseTimetable(jsonObject);
                 });
+    }
+
+    public static Map<DayOfWeek, List<Lesson>> parseTimetable(JsonObject jsonObject) {
+        Map<DayOfWeek, List<Lesson>> timetable = new LinkedHashMap<>();
+        if (jsonObject == null) return timetable;
+
+        for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
+            String shortcut = dayOfWeek.name();
+
+            if (!jsonObject.has(shortcut)) continue;
+
+            JsonArray jsonArray = jsonObject.get(shortcut).getAsJsonArray();
+
+            if (jsonArray.isEmpty()) {
+                timetable.put(dayOfWeek, Collections.emptyList());
+            } else {
+                List<Lesson> lessons = jsonArray.asList()
+                        .stream()
+                        .map(jsonElement -> LessonFactory.createLesson(jsonElement.getAsJsonObject()))
+                        .collect(Collectors.toList());
+
+                timetable.put(dayOfWeek, lessons);
+            }
+        }
+
+        return timetable;
     }
 }

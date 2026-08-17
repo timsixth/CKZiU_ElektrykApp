@@ -17,8 +17,63 @@
         android:paddingEnd="16dp"
         android:paddingBottom="16dp">
 
+        <!-- Offline Notice Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_settingsOfflineNotice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#262214"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeColor="#5C4813"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="14dp"
+                    android:contentDescription="@string/offline_mode"
+                    android:src="@drawable/ic_cloud_off"
+                    app:tint="#FFC107" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_offline_notice_title"
+                        android:textColor="#FFD54F"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/settings_offline_notice_description"
+                        android:textColor="#BDBDBD"
+                        android:textSize="13sp"
+                        android:lineSpacingExtra="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Card 1: Timetable Type -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_timetableType"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
@@ -62,6 +117,7 @@
 
         <!-- Card 2: Select Class / Teacher / Classroom -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_schoolEntries"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"

@@ -51,15 +51,19 @@ public class MainViewModel extends ViewModel {
         client = new CKZiUElektrykClient();
         client.setFailedApiConnectionCallback(e -> {
             Context context = MainActivity.getContext();
-            String errorMessage = context.getString(R.string.toastErrorMessage_failedApiConnection);
-
-            ToastUtils.showToast(context, errorMessage, true);
+            if (context != null) {
+                String errorMessage = context.getString(R.string.toastErrorMessage_failedApiConnection);
+                ToastUtils.showToast(context, errorMessage, false);
+            }
         });
 
         client.setFailedRouteRespondCallback(errorResponse -> {
             System.err.println("Error occurred: " + errorResponse.getMessage());
-            String errMess = MainActivity.getContext().getString(R.string.toast_errorMessage);
-            ToastUtils.showToast(MainActivity.getContext(), errMess, false);
+            Context context = MainActivity.getContext();
+            if (context != null) {
+                String errMess = context.getString(R.string.toast_errorMessage);
+                ToastUtils.showToast(context, errMess, false);
+            }
         });
     }
 
@@ -107,10 +111,16 @@ public class MainViewModel extends ViewModel {
     private void startTimetableDownload() {
         isLoadingTimetable.postValue(true);
         TimetableDataDownloader downloader = new TimetableDataDownloader(client, new TimetableDownloadCompleteListener() {
+            private boolean networkResponseReceived = false;
+
             @Override
             public void onDownloadComplete(Map<DayOfWeek, List<Lesson>> timetableMap) {
                 timetable.postValue(timetableMap);
-                isLoadingTimetable.postValue(false);
+                if (networkResponseReceived) {
+                    isLoadingTimetable.postValue(false);
+                } else {
+                    networkResponseReceived = true;
+                }
             }
 
             @Override
@@ -125,10 +135,16 @@ public class MainViewModel extends ViewModel {
     private void startArticlesDownload() {
         isLoadingArticles.postValue(true);
         ArticleDataDownloader downloader = new ArticleDataDownloader(client, new ArticlesDownloadCompleteListener() {
+            private boolean networkResponseReceived = false;
+
             @Override
             public void onDownloadComplete(List<Article> articleList) {
                 articles.postValue(articleList);
-                isLoadingArticles.postValue(false);
+                if (networkResponseReceived) {
+                    isLoadingArticles.postValue(false);
+                } else {
+                    networkResponseReceived = true;
+                }
             }
 
             @Override
@@ -143,10 +159,16 @@ public class MainViewModel extends ViewModel {
     private void startCalendarDownload() {
         isLoadingCalendar.postValue(true);
         CalendarDataDownloader downloader = new CalendarDataDownloader(client, new CalendarDownloadCompleteListener() {
+            private boolean networkResponseReceived = false;
+
             @Override
             public void onDownloadComplete(Calendar calendarData) {
                 calendar.postValue(calendarData);
-                isLoadingCalendar.postValue(false);
+                if (networkResponseReceived) {
+                    isLoadingCalendar.postValue(false);
+                } else {
+                    networkResponseReceived = true;
+                }
             }
 
             @Override

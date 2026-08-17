@@ -95,9 +95,14 @@ public class TimetableFragment extends Fragment {
         view.findViewById(R.id.nestedScrollableHost).setVisibility(View.VISIBLE);
     }
 
+    private TabLayoutMediator tabLayoutMediator;
+
     private void setHeadersToTabLayout() {
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
+        }
         TabLayout tabLayout = view.findViewById(R.id.tabLayout_dayNames);
-        new TabLayoutMediator(tabLayout, viewPager_timetable, (tab, position) -> {
+        tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager_timetable, (tab, position) -> {
             String data = switch (position) {
                 case 0 -> getResources().getString(R.string.mondayShortcut);
                 case 1 -> getResources().getString(R.string.tuesdayShortcut);
@@ -108,7 +113,17 @@ public class TimetableFragment extends Fragment {
             };
 
             tab.setText(data);
-        }).attach();
+        });
+        tabLayoutMediator.attach();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
+            tabLayoutMediator = null;
+        }
     }
 
     /**

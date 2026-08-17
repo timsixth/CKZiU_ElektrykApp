@@ -50,4 +50,8 @@
     <string name="empty_state_calendar_description">No calendar events are available at the moment</string>
     <string name="empty_state_day_title">No lessons</string>
     <string name="empty_state_day_description">No lessons scheduled for this day</string>
+    <string name="offline_mode">Offline mode</string>
+    <string name="gallery_unavailable_offline">Photo gallery is unavailable offline</string>
+    <string name="settings_offline_notice_title">Settings locked offline</string>
+    <string name="settings_offline_notice_description">Changing the timetable or user type is unavailable in offline mode. Connect to the internet to change these settings.</string>
 </resources>

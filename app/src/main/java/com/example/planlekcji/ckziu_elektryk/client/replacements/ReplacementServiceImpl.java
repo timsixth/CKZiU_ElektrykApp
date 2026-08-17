@@ -9,7 +9,6 @@ import com.example.planlekcji.ckziu_elektryk.client.utils.DateUtil;
 import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,7 @@ class ReplacementServiceImpl extends ClientService implements ReplacementService
         APIResponseCall apiResponseCall = getData(Endpoint.LATEST_REPLACEMENTS
                 .withPlaceholders(Map.of("{mode}", replacementType.getMode(), "{date}", DateUtil.formatDate(ReplacementRequest.REPLACEMENT_DATE_PATTERN, date))));
 
-        if (!apiResponseCall.hasResponse()) return Collections.emptyList();
+        if (!apiResponseCall.hasResponse()) return null;
 
         return apiResponseCall
                 .error(handleError())
