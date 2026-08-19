@@ -46,4 +46,7 @@
     <string name="gallery_unavailable_offline">Galeria zdjęć wymaga połączenia z internetem</string>
     <string name="settings_offline_notice_title">Wymagane połączenie z internetem</string>
     <string name="settings_offline_notice_description">Zmiana planu lekcji lub typu planu wymaga połączenia z internetem. Połącz się z siecią, aby zmienić te ustawienia.</string>
+    <string name="settings_groups_title">Moje grupy</string>
+    <string name="settings_groups_description">Wybierz grupy, do których należysz.\nPozostałe zostaną ukryte na planie lekcji.</string>
+    <string name="settings_groups_reset">Resetuj wybory</string>
 </resources>

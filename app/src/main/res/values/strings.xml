@@ -54,4 +54,7 @@
     <string name="gallery_unavailable_offline">Photo gallery requires an internet connection</string>
     <string name="settings_offline_notice_title">Internet connection required</string>
     <string name="settings_offline_notice_description">Changing the timetable or user type requires an internet connection. Connect to the internet to change these settings.</string>
+    <string name="settings_groups_title">My groups</string>
+    <string name="settings_groups_description">Select the groups you belong to.\nOther groups will be hidden on the timetable.</string>
+    <string name="settings_groups_reset">Reset selection</string>
 </resources>

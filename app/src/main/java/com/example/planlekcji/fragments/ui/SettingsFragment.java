@@ -66,6 +66,9 @@ public class SettingsFragment extends Fragment {
             }
         }
 
+        // Initial visibility
+        changeVisibility();
+
         // Fetch data relevant to settings.
         getData();
 
@@ -78,6 +81,7 @@ public class SettingsFragment extends Fragment {
         View cardNotice = view.findViewById(R.id.card_settingsOfflineNotice);
         View cardTimetableType = view.findViewById(R.id.card_timetableType);
         View cardSchoolEntries = view.findViewById(R.id.card_schoolEntries);
+        View cardMyGroups = view.findViewById(R.id.card_myGroups);
 
         Spinner spinnerUserType = view.findViewById(R.id.spinnerUserType);
         Spinner spinnerClassTokens = view.findViewById(R.id.spinnerClassTokens);
@@ -96,6 +100,7 @@ public class SettingsFragment extends Fragment {
         float alpha = isOnline ? 1.0f : 0.45f;
         if (cardTimetableType != null) cardTimetableType.setAlpha(alpha);
         if (cardSchoolEntries != null) cardSchoolEntries.setAlpha(alpha);
+        if (cardMyGroups != null) cardMyGroups.setAlpha(alpha);
 
         if (spinnerUserType != null) spinnerUserType.setEnabled(isOnline);
         if (spinnerClassTokens != null) spinnerClassTokens.setEnabled(isOnline);
@@ -252,6 +257,11 @@ public class SettingsFragment extends Fragment {
         view.findViewById(R.id.spinnerClassTokens).setVisibility(classVisibility);
         view.findViewById(R.id.spinnerTeacherTokens).setVisibility(teacherVisibility);
         view.findViewById(R.id.spinnerClassroomTokens).setVisibility(classroomVisibility);
+
+        View cardMyGroups = view.findViewById(R.id.card_myGroups);
+        if (cardMyGroups != null) {
+            cardMyGroups.setVisibility(whichIsVisible == 1 ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void getData() {
