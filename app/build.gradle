@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.example.planlekcji'
+    namespace = 'com.example.planlekcji'
     compileSdk 36
 
     defaultConfig {
@@ -22,9 +22,9 @@ android {
     buildTypes {
         release {
             minifyEnabled true
-            shrinkResources true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
     }
     compileOptions {
