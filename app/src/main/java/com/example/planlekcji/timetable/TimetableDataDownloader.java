@@ -51,7 +51,7 @@ public class TimetableDataDownloader implements Runnable {
                     JsonObject jsonObject = JsonParser.parseString(cachedJson).getAsJsonObject();
                     Map<DayOfWeek, List<Lesson>> cachedMap = AbstractTimetableService.parseTimetable(jsonObject);
                     if (cachedMap != null && !cachedMap.isEmpty()) {
-                        listener.onDownloadComplete(cachedMap);
+                        listener.onCacheLoaded(cachedMap);
                     }
                 }
             } catch (Exception e) {

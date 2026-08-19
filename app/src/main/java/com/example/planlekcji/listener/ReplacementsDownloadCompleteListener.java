@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface ReplacementsDownloadCompleteListener {
 
+    default void onCacheLoaded(List<List<Replacement>> rawReplacements) {}
+
     void onDownloadComplete(List<List<Replacement>> rawReplacements);
 
     void onDownloadFailed();

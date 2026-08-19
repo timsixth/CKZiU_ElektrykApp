@@ -51,7 +51,7 @@ public class ReplacementDataDownloader implements Runnable {
             try {
                 List<List<Replacement>> cached = DatabaseCacheManager.getInstance(context).getObject(cacheKey, listType);
                 if (cached != null && !cached.isEmpty()) {
-                    listener.onDownloadComplete(cached);
+                    listener.onCacheLoaded(cached);
                 }
             } catch (Exception e) {
                 Log.e("ReplacementsDownloader", "Failed to load cached replacements", e);

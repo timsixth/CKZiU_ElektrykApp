@@ -63,21 +63,18 @@ public class MainActivity extends AppCompatActivity {
         // Progress bar
         ProgressBar progressBar = findViewById(R.id.progressBar);
 
-        mainViewModel.getIsLoadingReplacements().observe(this, isLoading ->
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
-        );
+        androidx.lifecycle.Observer<Boolean> loadingObserver = unused -> {
+            boolean isLoading = Boolean.TRUE.equals(mainViewModel.getIsLoadingReplacements().getValue())
+                    || Boolean.TRUE.equals(mainViewModel.getIsLoadingTimetable().getValue())
+                    || Boolean.TRUE.equals(mainViewModel.getIsLoadingArticles().getValue())
+                    || Boolean.TRUE.equals(mainViewModel.getIsLoadingCalendar().getValue());
+            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        };
 
-        mainViewModel.getIsLoadingTimetable().observe(this, isLoading ->
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
-        );
-
-        mainViewModel.getIsLoadingArticles().observe(this, isLoading ->
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
-        );
-
-        mainViewModel.getIsLoadingCalendar().observe(this, isLoading ->
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
-        );
+        mainViewModel.getIsLoadingReplacements().observe(this, loadingObserver);
+        mainViewModel.getIsLoadingTimetable().observe(this, loadingObserver);
+        mainViewModel.getIsLoadingArticles().observe(this, loadingObserver);
+        mainViewModel.getIsLoadingCalendar().observe(this, loadingObserver);
 
         // Set adapter
         ViewPager2 viewPager2_appContent = findViewById(R.id.viewPager2_appContent);
@@ -113,36 +110,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }).attach();
-
-        // Add listener to refresh data upon exiting settings if settings changed
-        tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            private SchoolEntryType lastType;
-            private String lastToken;
-
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                if (tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
-                    lastType = getTimetableType();
-                    lastToken = getToken(lastType);
-                }
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                if (tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
-                    SchoolEntryType currentType = getTimetableType();
-                    String currentToken = getToken(currentType);
-
-                    if (currentType != lastType || !java.util.Objects.equals(currentToken, lastToken)) {
-                        mainViewModel.fetchTimetable();
-                        mainViewModel.fetchReplacements();
-                    }
-                }
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
-        });
     }
 
     @Override

@@ -94,6 +94,11 @@ public class MainViewModel extends ViewModel {
         isLoadingReplacements.postValue(true);
         ReplacementDataDownloader downloader = new ReplacementDataDownloader(client, new ReplacementsDownloadCompleteListener() {
             @Override
+            public void onCacheLoaded(List<List<Replacement>> replacementList) {
+                replacements.postValue(replacementList);
+            }
+
+            @Override
             public void onDownloadComplete(List<List<Replacement>> replacementList) {
                 replacements.postValue(replacementList);
                 isLoadingReplacements.postValue(false);
@@ -111,6 +116,11 @@ public class MainViewModel extends ViewModel {
     private void startTimetableDownload() {
         isLoadingTimetable.postValue(true);
         TimetableDataDownloader downloader = new TimetableDataDownloader(client, new TimetableDownloadCompleteListener() {
+            @Override
+            public void onCacheLoaded(Map<DayOfWeek, List<Lesson>> timetableMap) {
+                timetable.postValue(timetableMap);
+            }
+
             @Override
             public void onDownloadComplete(Map<DayOfWeek, List<Lesson>> timetableMap) {
                 timetable.postValue(timetableMap);

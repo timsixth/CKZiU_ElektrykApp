@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,7 @@ import com.example.planlekcji.settings.SchoolEntriesDownloader;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SettingsFragment extends Fragment {
     private SharedPreferences sharedPref;
@@ -29,6 +31,24 @@ public class SettingsFragment extends Fragment {
     private List<SchoolEntry> classroomsSchoolEntries = new ArrayList<>();
     private View view;
     private MainViewModel mainViewModel;
+    private final Handler fetchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable fetchRunnable = () -> {
+        if (isAdded() && mainViewModel != null) {
+            mainViewModel.fetchTimetable();
+            mainViewModel.fetchReplacements();
+        }
+    };
+
+    private void scheduleDataFetch() {
+        fetchHandler.removeCallbacks(fetchRunnable);
+        fetchHandler.postDelayed(fetchRunnable, 150);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        fetchHandler.removeCallbacks(fetchRunnable);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -153,10 +173,16 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 SchoolEntry schoolEntry = schoolEntries.get(i);
+                String oldToken = sharedPref.getString(sharedPreferencesToken, "");
+                String newToken = schoolEntry.shortcut();
 
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putString(sharedPreferencesToken, schoolEntry.shortcut());
-                editor.apply();
+                if (!Objects.equals(oldToken, newToken)) {
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString(sharedPreferencesToken, newToken);
+                    editor.apply();
+
+                    scheduleDataFetch();
+                }
             }
 
             @Override
@@ -181,11 +207,15 @@ public class SettingsFragment extends Fragment {
         spinnerUserType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putInt(getString(R.string.selectedTypeOfTimetableKey), i);
-                editor.apply();
+                int oldTypeIndex = sharedPref.getInt(getString(R.string.selectedTypeOfTimetableKey), 0);
+                if (oldTypeIndex != i) {
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putInt(getString(R.string.selectedTypeOfTimetableKey), i);
+                    editor.apply();
 
-                changeVisibility();
+                    changeVisibility();
+                    scheduleDataFetch();
+                }
             }
 
             @Override
