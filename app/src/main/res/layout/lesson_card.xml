@@ -17,38 +17,79 @@
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="6dp"
-        android:paddingTop="8dp"
+        android:minHeight="76dp"
+        android:paddingStart="0dp"
+        android:paddingTop="12dp"
         android:paddingEnd="10dp"
-        android:paddingBottom="8dp">
+        android:paddingBottom="12dp">
 
         <!-- LessonNumber -->
         <TextView
             android:id="@+id/textViewLessonNumber"
-            android:layout_width="46dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="6dp"
+            android:includeFontPadding="false"
             android:text="@string/lessonCard_placeholder_lessonNumber"
             android:textAlignment="center"
             android:textColor="@color/fontColor"
-            android:textSize="28sp"
+            android:textSize="26sp"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/lessonCard_divider"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Merged Lesson Number Container -->
+        <LinearLayout
+            android:id="@+id/layout_mergedLessonNumber"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/lessonCard_divider"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/textViewLessonNumberStart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:textColor="@color/fontColor"
+                android:textSize="26sp" />
+
+            <View
+                android:id="@+id/view_mergedLessonDivider"
+                android:layout_width="1.5dp"
+                android:layout_height="10dp"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp"
+                android:background="#44FFFFFF" />
+
+            <TextView
+                android:id="@+id/textViewLessonNumberEnd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:textColor="@color/fontColor"
+                android:textSize="26sp" />
+        </LinearLayout>
 
         <!-- LessonHours -->
         <View
             android:id="@+id/lessonCard_divider"
             android:layout_width="1dp"
             android:layout_height="0dp"
+            android:layout_marginStart="52dp"
             android:layout_marginTop="2dp"
             android:layout_marginBottom="2dp"
             android:background="?android:attr/listDivider"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/textViewLessonHours"
-            app:layout_constraintStart_toEndOf="@+id/textViewLessonNumber"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView

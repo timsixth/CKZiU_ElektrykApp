@@ -2,27 +2,23 @@ package com.example.planlekcji.timetable.ui;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import android.graphics.Typeface;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.google.android.material.card.MaterialCardView;
-
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.R;
-import com.example.planlekcji.utils.EmptyStateHelper;
-import com.example.planlekcji.utils.EmptyStateType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.GroupLesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
@@ -30,12 +26,18 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.LessonDetai
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SchoolClass;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SingleLesson;
 import com.example.planlekcji.timetable.model.DayOfWeek;
+import com.example.planlekcji.utils.EmptyStateHelper;
+import com.example.planlekcji.utils.EmptyStateType;
+import com.google.android.material.card.MaterialCardView;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class LessonFragment extends Fragment {
@@ -51,7 +53,6 @@ public class LessonFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_, container, false);
     }
 
@@ -75,65 +76,95 @@ public class LessonFragment extends Fragment {
         }
 
         List<Lesson> lessonList = timetableMap.get(thisDayNumber);
-        int currentLessonIndex = getCurrentLessonIndex(tabNumber, lessonList);
-
-        Map<Integer, List<LessonDetails>> lessonDataMap = new HashMap<>();
-        Map<Integer, String> lessonTimeMap = new HashMap<>();
-
         if (lessonList == null) {
             Log.e("TimetableLessonFragment", "lessonList is empty");
             return;
         }
 
-        for (Lesson lesson : lessonList) {
-            for (int number : lesson.getLessonsNumbers()) {
-                if (lesson.getDuration() != null && lesson.getDuration().startTime() != null && lesson.getDuration().endTime() != null) {
-                    String timeRange = lesson.getDuration().startTime().toString() + " - " + lesson.getDuration().endTime().toString();
-                    lessonTimeMap.put(number, timeRange);
-                }
+        List<TimetableCardItem> cardItems = new ArrayList<>();
+        Set<Integer> coveredNumbers = new HashSet<>();
+        int minLessonNumber = Integer.MAX_VALUE;
+        int maxLessonNumber = Integer.MIN_VALUE;
 
-                if (lesson instanceof SingleLesson) {
-                    LessonDetails lessonDetails = ((SingleLesson) lesson).getDetails();
-                    lessonDataMap.put(number, Collections.singletonList(lessonDetails));
-                } else if (lesson instanceof GroupLesson) {
-                    List<LessonDetails> lessonDetailsObject = ((GroupLesson) lesson).getLessonsDetails();
-                    lessonDataMap.put(number, lessonDetailsObject);
-                }
+        for (Lesson lesson : lessonList) {
+            List<Integer> nums = lesson.getLessonsNumbers();
+            if (nums == null || nums.isEmpty()) continue;
+
+            for (int num : nums) {
+                coveredNumbers.add(num);
+                if (num < minLessonNumber) minLessonNumber = num;
+                if (num > maxLessonNumber) maxLessonNumber = num;
             }
+
+            int firstNum = Collections.min(nums);
+            int lastNum = Collections.max(nums);
+            boolean isMerged = (firstNum != lastNum);
+            String singleNumberText = isMerged ? "" : String.valueOf(firstNum);
+
+            String timeRange = "";
+            if (lesson.getDuration() != null && lesson.getDuration().startTime() != null && lesson.getDuration().endTime() != null) {
+                timeRange = lesson.getDuration().startTime().toString() + " - " + lesson.getDuration().endTime().toString();
+            }
+
+            List<LessonDetails> detailsList;
+            if (lesson instanceof SingleLesson) {
+                detailsList = Collections.singletonList(((SingleLesson) lesson).getDetails());
+            } else if (lesson instanceof GroupLesson) {
+                detailsList = ((GroupLesson) lesson).getLessonsDetails();
+            } else {
+                detailsList = Collections.emptyList();
+            }
+
+            boolean isCurrentLesson = isLessonCurrentlyActive(tabNumber, lesson);
+            cardItems.add(new TimetableCardItem(isMerged, firstNum, lastNum, singleNumberText, timeRange, detailsList, isCurrentLesson, firstNum));
         }
 
         // No lessons scheduled for this day
-        if (lessonDataMap.isEmpty()) {
+        if (cardItems.isEmpty() || coveredNumbers.isEmpty()) {
             layout.addView(EmptyStateHelper.create(inflater, layout, EmptyStateType.DAY_OFF));
             return;
         }
 
-        int minKey = Collections.min(lessonDataMap.keySet());
-        int maxKey = Collections.max(lessonDataMap.keySet());
-
-        // Add empty data entries for gaps between lessons
-        for (int i = minKey; i <= maxKey; i++) {
-            if (!lessonDataMap.containsKey(i)) {
-                lessonDataMap.put(i, Collections.emptyList());
+        // Add empty data entries for gaps (okienka) between lessons
+        for (int i = minLessonNumber; i <= maxLessonNumber; i++) {
+            if (!coveredNumbers.contains(i)) {
+                cardItems.add(new TimetableCardItem(false, i, i, String.valueOf(i), "", Collections.emptyList(), false, i));
             }
         }
 
-        for (Integer i : lessonDataMap.keySet()) {
+        cardItems.sort(Comparator.comparingInt(item -> item.sortOrder));
+
+        for (TimetableCardItem item : cardItems) {
             MaterialCardView cardView = (MaterialCardView) inflater.inflate(R.layout.lesson_card, layout, false);
 
             TextView lessonHoursText = cardView.findViewById(R.id.textViewLessonHours);
             TextView lessonNumber = cardView.findViewById(R.id.textViewLessonNumber);
+            LinearLayout layoutMergedLessonNumber = cardView.findViewById(R.id.layout_mergedLessonNumber);
+            TextView lessonNumberStart = cardView.findViewById(R.id.textViewLessonNumberStart);
+            TextView lessonNumberEnd = cardView.findViewById(R.id.textViewLessonNumberEnd);
+            View mergedLessonDivider = cardView.findViewById(R.id.view_mergedLessonDivider);
             View divider = cardView.findViewById(R.id.lessonCard_divider);
             LinearLayout lessonsContainer = cardView.findViewById(R.id.layout_lessonsContainer);
             TextView viewLessonData = cardView.findViewById(R.id.textViewLessonData);
 
-            String timeRangeString = lessonTimeMap.getOrDefault(i, "");
+            lessonHoursText.setText(item.timeRange);
 
-            lessonHoursText.setText(timeRangeString);
-            lessonNumber.setText(String.valueOf(i));
+            if (item.isMerged) {
+                lessonNumber.setVisibility(View.GONE);
+                layoutMergedLessonNumber.setVisibility(View.VISIBLE);
+                lessonNumberStart.setText(String.valueOf(item.startNumber));
+                lessonNumberEnd.setText(String.valueOf(item.endNumber));
+                lessonNumberStart.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+                lessonNumberEnd.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+            } else {
+                lessonNumber.setVisibility(View.VISIBLE);
+                layoutMergedLessonNumber.setVisibility(View.GONE);
+                lessonNumber.setText(item.singleNumberText);
+                lessonNumber.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+            }
 
-            List<LessonDetails> detailsList = lessonDataMap.get(i);
-            boolean isCurrentLesson = (currentLessonIndex == i);
+            List<LessonDetails> detailsList = item.detailsList;
+            boolean isCurrentLesson = item.isCurrent;
 
             if (detailsList == null || detailsList.isEmpty()) {
                 viewLessonData.setVisibility(View.VISIBLE);
@@ -188,6 +219,16 @@ public class LessonFragment extends Fragment {
 
                 lessonNumber.setTextColor(goldColor);
                 lessonNumber.setTypeface(null, Typeface.BOLD);
+
+                if (item.isMerged) {
+                    lessonNumberStart.setTextColor(goldColor);
+                    lessonNumberStart.setTypeface(null, Typeface.BOLD);
+                    lessonNumberEnd.setTextColor(goldColor);
+                    lessonNumberEnd.setTypeface(null, Typeface.BOLD);
+                    if (mergedLessonDivider != null) {
+                        mergedLessonDivider.setBackgroundColor(strokeColor);
+                    }
+                }
 
                 lessonHoursText.setTextColor(Color.parseColor("#FFD54F"));
                 lessonHoursText.setAlpha(1.0f);
@@ -246,34 +287,50 @@ public class LessonFragment extends Fragment {
     }
 
     /**
-     * Determines the index of the current active lesson based on current time and API lesson durations.
+     * Determines whether the given lesson is currently active based on system time and lesson duration.
      *
-     * @return The index of the current lesson or 0 if there is no active lesson.
+     * @param tabNumber Tab day index (1 = Monday, 2 = Tuesday, etc.)
+     * @param lesson    The lesson to check
+     * @return True if the lesson is currently active.
      */
-    private int getCurrentLessonIndex(int tabNumber, List<Lesson> lessonList) {
+    private boolean isLessonCurrentlyActive(int tabNumber, Lesson lesson) {
+        if (lesson == null || lesson.getDuration() == null
+                || lesson.getDuration().startTime() == null
+                || lesson.getDuration().endTime() == null) {
+            return false;
+        }
+
         Calendar calendar = Calendar.getInstance();
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1; // Monday == 1, Tuesday == 2, etc
 
-        if (dayOfWeek != tabNumber || lessonList == null || lessonList.isEmpty()) return 0;
+        if (dayOfWeek != tabNumber) return false;
 
         int currentMinutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
+        int startMinutes = lesson.getDuration().startTime().getHours() * 60 + lesson.getDuration().startTime().getMinutes();
+        int endMinutes = lesson.getDuration().endTime().getHours() * 60 + lesson.getDuration().endTime().getMinutes();
 
-        for (Lesson lesson : lessonList) {
-            if (lesson.getDuration() == null || lesson.getDuration().startTime() == null || lesson.getDuration().endTime() == null) {
-                continue;
-            }
-
-            int startMinutes = lesson.getDuration().startTime().getHours() * 60 + lesson.getDuration().startTime().getMinutes();
-            int endMinutes = lesson.getDuration().endTime().getHours() * 60 + lesson.getDuration().endTime().getMinutes();
-
-            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
-                if (lesson.getLessonsNumbers() != null && !lesson.getLessonsNumbers().isEmpty()) {
-                    return lesson.getLessonsNumbers().get(0);
-                }
-            }
-        }
-
-        return 0;
+        return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
     }
 
+    private static class TimetableCardItem {
+        final boolean isMerged;
+        final int startNumber;
+        final int endNumber;
+        final String singleNumberText;
+        final String timeRange;
+        final List<LessonDetails> detailsList;
+        final boolean isCurrent;
+        final int sortOrder;
+
+        TimetableCardItem(boolean isMerged, int startNumber, int endNumber, String singleNumberText, String timeRange, List<LessonDetails> detailsList, boolean isCurrent, int sortOrder) {
+            this.isMerged = isMerged;
+            this.startNumber = startNumber;
+            this.endNumber = endNumber;
+            this.singleNumberText = singleNumberText;
+            this.timeRange = timeRange;
+            this.detailsList = detailsList;
+            this.isCurrent = isCurrent;
+            this.sortOrder = sortOrder;
+        }
+    }
 }
