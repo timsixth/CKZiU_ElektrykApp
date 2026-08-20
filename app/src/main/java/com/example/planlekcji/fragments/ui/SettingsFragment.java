@@ -18,10 +18,16 @@ import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntry;
+import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
+import com.example.planlekcji.settings.GroupPreferenceManager;
 import com.example.planlekcji.settings.SchoolEntriesDownloader;
+import com.example.planlekcji.settings.SubjectGroupView;
+import com.example.planlekcji.timetable.model.DayOfWeek;
+import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class SettingsFragment extends Fragment {
@@ -64,6 +70,15 @@ public class SettingsFragment extends Fragment {
             if (activity.getNetworkMonitor() != null) {
                 activity.getNetworkMonitor().getIsOnlineLiveData().observe(getViewLifecycleOwner(), this::updateOnlineState);
             }
+        }
+
+        // Observe timetable for group preferences
+        mainViewModel.getTimetableLiveData().observe(getViewLifecycleOwner(), this::updateGroupsUI);
+
+        // Setup reset groups button
+        View resetButton = view.findViewById(R.id.button_resetGroups);
+        if (resetButton != null) {
+            resetButton.setOnClickListener(v -> resetCurrentClassGroups());
         }
 
         // Initial visibility
@@ -261,6 +276,63 @@ public class SettingsFragment extends Fragment {
         View cardMyGroups = view.findViewById(R.id.card_myGroups);
         if (cardMyGroups != null) {
             cardMyGroups.setVisibility(whichIsVisible == 1 ? View.VISIBLE : View.GONE);
+        }
+
+        if (whichIsVisible == 1 && mainViewModel != null) {
+            updateGroupsUI(mainViewModel.getTimetableLiveData().getValue());
+        }
+    }
+
+    private void updateGroupsUI(Map<DayOfWeek, List<Lesson>> timetableMap) {
+        if (!isAdded() || view == null) return;
+
+        LinearLayout container = view.findViewById(R.id.layout_groupsContainer);
+        if (container == null) return;
+
+        container.removeAllViews();
+
+        int timetableType = sharedPref.getInt(getString(R.string.selectedTypeOfTimetableKey), 0);
+        if (timetableType != 0) {
+            return;
+        }
+
+        String classToken = sharedPref.getString(getString(R.string.classTokenKey), "");
+        if (classToken.isEmpty()) {
+            return;
+        }
+
+        Map<String, List<String>> groupOptions = GroupPreferenceManager.extractGroupOptions(timetableMap);
+
+        for (Map.Entry<String, List<String>> entry : groupOptions.entrySet()) {
+            String subjectName = entry.getKey();
+            List<String> options = entry.getValue();
+
+            String selectedOption = GroupPreferenceManager.getChoice(sharedPref, classToken, subjectName);
+
+            SubjectGroupView groupView = new SubjectGroupView(requireContext());
+            groupView.bind(subjectName, options, selectedOption, chosenOption -> {
+                GroupPreferenceManager.saveChoice(sharedPref, classToken, subjectName, chosenOption);
+            });
+
+            container.addView(groupView);
+        }
+    }
+
+    private void resetCurrentClassGroups() {
+        String classToken = sharedPref.getString(getString(R.string.classTokenKey), "");
+        if (!classToken.isEmpty()) {
+            GroupPreferenceManager.resetClassChoices(sharedPref, classToken);
+        }
+        if (view != null) {
+            LinearLayout container = view.findViewById(R.id.layout_groupsContainer);
+            if (container != null) {
+                for (int i = 0; i < container.getChildCount(); i++) {
+                    View child = container.getChildAt(i);
+                    if (child instanceof SubjectGroupView) {
+                        ((SubjectGroupView) child).clearSelection();
+                    }
+                }
+            }
         }
     }
 
