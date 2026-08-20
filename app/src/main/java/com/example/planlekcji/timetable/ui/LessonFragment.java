@@ -293,8 +293,8 @@ public class LessonFragment extends Fragment {
             if (chosenGroup == null) {
                 filtered.add(details);
             } else {
-                String groupLabel = GroupPreferenceManager.formatGroupLabel(details.getClassroom(), details.getTeacher());
-                if (chosenGroup.equals(groupLabel)) {
+                List<String> labels = GroupPreferenceManager.extractLabelsFromDetails(details);
+                if (labels.contains(chosenGroup)) {
                     filtered.add(details);
                 }
             }

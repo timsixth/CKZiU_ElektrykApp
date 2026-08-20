@@ -76,6 +76,30 @@ public final class GroupPreferenceManager {
         return t;
     }
 
+    public static List<String> extractLabelsFromDetails(LessonDetails details) {
+        if (details == null) return Collections.emptyList();
+
+        List<String> teachers = details.getTeachers();
+        List<String> classrooms = details.getClassrooms();
+
+        int max = Math.max(teachers != null ? teachers.size() : 0, classrooms != null ? classrooms.size() : 0);
+        if (max == 0) {
+            String label = formatGroupLabel(details.getClassroom(), details.getTeacher());
+            return label.isEmpty() ? Collections.emptyList() : Collections.singletonList(label);
+        }
+
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < max; i++) {
+            String t = (teachers != null && i < teachers.size()) ? teachers.get(i) : "";
+            String c = (classrooms != null && i < classrooms.size()) ? classrooms.get(i) : "";
+            String label = formatGroupLabel(c, t);
+            if (!label.isEmpty() && !labels.contains(label)) {
+                labels.add(label);
+            }
+        }
+        return labels;
+    }
+
     public static Map<String, List<String>> extractGroupOptions(
             Map<DayOfWeek, List<Lesson>> timetableMap
     ) {
@@ -98,10 +122,10 @@ public final class GroupPreferenceManager {
                     String subjectName = details.getSubject().name();
                     if (subjectName == null || subjectName.trim().isEmpty()) continue;
 
-                    String label = formatGroupLabel(details.getClassroom(), details.getTeacher());
-                    if (label.isEmpty()) continue;
-
-                    subjectGroupsMap.computeIfAbsent(subjectName.trim(), k -> new LinkedHashSet<>()).add(label);
+                    List<String> labels = extractLabelsFromDetails(details);
+                    for (String label : labels) {
+                        subjectGroupsMap.computeIfAbsent(subjectName.trim(), k -> new LinkedHashSet<>()).add(label);
+                    }
                 }
             }
         }
