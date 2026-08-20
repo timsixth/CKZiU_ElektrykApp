@@ -23,6 +23,7 @@ import com.example.planlekcji.settings.GroupPreferenceManager;
 import com.example.planlekcji.settings.SchoolEntriesDownloader;
 import com.example.planlekcji.settings.SubjectGroupView;
 import com.example.planlekcji.timetable.model.DayOfWeek;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
@@ -74,6 +75,19 @@ public class SettingsFragment extends Fragment {
 
         // Observe timetable for group preferences
         mainViewModel.getTimetableLiveData().observe(getViewLifecycleOwner(), this::updateGroupsUI);
+
+        // Setup hide unselected switch
+        SwitchMaterial switchHideUnselected = view.findViewById(R.id.switch_hideUnselectedGroups);
+        View layoutHideSwitch = view.findViewById(R.id.layout_hideUnselectedSwitch);
+        if (switchHideUnselected != null) {
+            switchHideUnselected.setChecked(GroupPreferenceManager.isHideUnselected(sharedPref));
+            switchHideUnselected.setOnCheckedChangeListener((btn, isChecked) -> {
+                GroupPreferenceManager.setHideUnselected(sharedPref, isChecked);
+            });
+            if (layoutHideSwitch != null) {
+                layoutHideSwitch.setOnClickListener(v -> switchHideUnselected.toggle());
+            }
+        }
 
         // Setup reset groups button
         View resetButton = view.findViewById(R.id.button_resetGroups);

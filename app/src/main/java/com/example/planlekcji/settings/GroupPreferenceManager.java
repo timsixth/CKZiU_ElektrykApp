@@ -23,8 +23,19 @@ import java.util.Set;
 public final class GroupPreferenceManager {
 
     private static final String PREF_PREFIX = "group_pref_";
+    public static final String KEY_HIDE_UNSELECTED = "group_pref_hide_unselected";
 
     private GroupPreferenceManager() {}
+
+    public static boolean isHideUnselected(SharedPreferences prefs) {
+        return prefs != null && prefs.getBoolean(KEY_HIDE_UNSELECTED, false);
+    }
+
+    public static void setHideUnselected(SharedPreferences prefs, boolean hide) {
+        if (prefs != null) {
+            prefs.edit().putBoolean(KEY_HIDE_UNSELECTED, hide).apply();
+        }
+    }
 
     public static String buildKey(String classToken, String subjectName) {
         return PREF_PREFIX + classToken + "_" + subjectName;
