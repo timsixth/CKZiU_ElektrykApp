@@ -10,9 +10,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.example.planlekcji.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
@@ -26,7 +23,7 @@ import java.util.List;
 public class SubjectGroupView extends LinearLayout {
 
     public interface OnGroupSelectionListener {
-        void onOptionSelected(@Nullable String selectedOption);
+        void onOptionSelected(String selectedOption);
     }
 
     private TextView titleTextView;
@@ -35,22 +32,22 @@ public class SubjectGroupView extends LinearLayout {
     private OnGroupSelectionListener selectionListener;
     private boolean isBinding = false;
 
-    public SubjectGroupView(@NonNull Context context) {
+    public SubjectGroupView(Context context) {
         super(context);
         init(context);
     }
 
-    public SubjectGroupView(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public SubjectGroupView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
 
-    public SubjectGroupView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public SubjectGroupView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context);
     }
 
-    private void init(@NonNull Context context) {
+    private void init(Context context) {
         setOrientation(VERTICAL);
         inflate(context, R.layout.item_subject_group, this);
 
@@ -76,10 +73,10 @@ public class SubjectGroupView extends LinearLayout {
     }
 
     public void bind(
-            @NonNull String subjectTitle,
-            @NonNull List<String> options,
-            @Nullable String selectedOption,
-            @Nullable OnGroupSelectionListener listener
+            String subjectTitle,
+            List<String> options,
+            String selectedOption,
+            OnGroupSelectionListener listener
     ) {
         this.isBinding = true;
         this.subjectTitle = subjectTitle;
@@ -144,7 +141,7 @@ public class SubjectGroupView extends LinearLayout {
         isBinding = false;
     }
 
-    public void setSelectedOption(@Nullable String option) {
+    public void setSelectedOption(String option) {
         isBinding = true;
         if (option == null) {
             toggleGroup.clearChecked();
@@ -160,7 +157,6 @@ public class SubjectGroupView extends LinearLayout {
         isBinding = false;
     }
 
-    @Nullable
     public String getSelectedOption() {
         int checkedId = toggleGroup.getCheckedButtonId();
         if (checkedId == View.NO_ID) return null;
@@ -171,7 +167,6 @@ public class SubjectGroupView extends LinearLayout {
         return null;
     }
 
-    @NonNull
     public String getSubjectTitle() {
         return subjectTitle;
     }
