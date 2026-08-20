@@ -1,6 +1,7 @@
 package com.example.planlekcji.timetable.ui;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.LessonDetails;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SchoolClass;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SingleLesson;
+import com.example.planlekcji.settings.GroupPreferenceManager;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 import com.example.planlekcji.utils.EmptyStateHelper;
 import com.example.planlekcji.utils.EmptyStateType;
@@ -59,14 +61,28 @@ public class LessonFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        populateCards();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        populateCards();
+    }
+
+    private void populateCards() {
+        if (!isAdded() || getView() == null) return;
 
         Context context = requireContext();
-        LinearLayout layout = view.findViewById(R.id.linearLayoutCards);
+        LinearLayout layout = getView().findViewById(R.id.linearLayoutCards);
+        if (layout == null) return;
+        layout.removeAllViews();
+
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        assert getArguments() != null;
+        if (getArguments() == null) return;
         String argument = getArguments().getString(TITLE);
-        assert argument != null;
+        if (argument == null || argument.length() < 4) return;
         int tabNumber = Character.getNumericValue(argument.charAt(3));
 
         DayOfWeek thisDayNumber = DayOfWeek.getDayOfWeek(tabNumber);
@@ -81,6 +97,10 @@ public class LessonFragment extends Fragment {
             return;
         }
 
+        SharedPreferences sharedPref = MainActivity.getContext().getSharedPreferences("sharedPrefs", 0);
+        SchoolEntryType timetableType = MainActivity.getTimetableType();
+        String classToken = (timetableType == SchoolEntryType.CLASSES) ? sharedPref.getString(getString(R.string.classTokenKey), "") : "";
+
         List<TimetableCardItem> cardItems = new ArrayList<>();
         Set<Integer> coveredNumbers = new HashSet<>();
         int minLessonNumber = Integer.MAX_VALUE;
@@ -89,6 +109,24 @@ public class LessonFragment extends Fragment {
         for (Lesson lesson : lessonList) {
             List<Integer> nums = lesson.getLessonsNumbers();
             if (nums == null || nums.isEmpty()) continue;
+
+            List<LessonDetails> rawDetailsList;
+            if (lesson instanceof SingleLesson) {
+                rawDetailsList = Collections.singletonList(((SingleLesson) lesson).getDetails());
+            } else if (lesson instanceof GroupLesson) {
+                rawDetailsList = ((GroupLesson) lesson).getLessonsDetails();
+            } else {
+                rawDetailsList = Collections.emptyList();
+            }
+
+            List<LessonDetails> detailsList = (timetableType == SchoolEntryType.CLASSES && !classToken.isEmpty())
+                    ? filterLessonDetails(rawDetailsList, classToken, sharedPref)
+                    : rawDetailsList;
+
+            // If all groups in this lesson were filtered out, skip this lesson
+            if (!rawDetailsList.isEmpty() && detailsList.isEmpty()) {
+                continue;
+            }
 
             for (int num : nums) {
                 coveredNumbers.add(num);
@@ -104,15 +142,6 @@ public class LessonFragment extends Fragment {
             String timeRange = "";
             if (lesson.getDuration() != null && lesson.getDuration().startTime() != null && lesson.getDuration().endTime() != null) {
                 timeRange = lesson.getDuration().startTime().toString() + " - " + lesson.getDuration().endTime().toString();
-            }
-
-            List<LessonDetails> detailsList;
-            if (lesson instanceof SingleLesson) {
-                detailsList = Collections.singletonList(((SingleLesson) lesson).getDetails());
-            } else if (lesson instanceof GroupLesson) {
-                detailsList = ((GroupLesson) lesson).getLessonsDetails();
-            } else {
-                detailsList = Collections.emptyList();
             }
 
             boolean isCurrentLesson = isLessonCurrentlyActive(tabNumber, lesson);
@@ -240,6 +269,37 @@ public class LessonFragment extends Fragment {
 
             layout.addView(cardView);
         }
+    }
+
+    private List<LessonDetails> filterLessonDetails(List<LessonDetails> detailsList, String classToken, SharedPreferences sharedPref) {
+        if (detailsList == null || detailsList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<LessonDetails> filtered = new ArrayList<>();
+        for (LessonDetails details : detailsList) {
+            if (details == null || details.getSubject() == null) {
+                filtered.add(details);
+                continue;
+            }
+
+            String subjectName = details.getSubject().name();
+            if (subjectName == null || subjectName.trim().isEmpty()) {
+                filtered.add(details);
+                continue;
+            }
+
+            String chosenGroup = GroupPreferenceManager.getChoice(sharedPref, classToken, subjectName.trim());
+            if (chosenGroup == null) {
+                filtered.add(details);
+            } else {
+                String groupLabel = GroupPreferenceManager.formatGroupLabel(details.getClassroom(), details.getTeacher());
+                if (chosenGroup.equals(groupLabel)) {
+                    filtered.add(details);
+                }
+            }
+        }
+        return filtered;
     }
 
     private String getSubjectText(LessonDetails lessonDetails) {

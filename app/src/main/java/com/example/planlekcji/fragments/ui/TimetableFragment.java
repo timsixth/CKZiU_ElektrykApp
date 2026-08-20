@@ -56,6 +56,14 @@ public class TimetableFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (timetableMap != null && !timetableMap.isEmpty() && viewPager_timetable != null) {
+            setAdapterToViewPager();
+        }
+    }
+
     private void setAdapterToViewPager() {
         Adapter adapter = new Adapter(getChildFragmentManager(), getLifecycle(), timetableMap);
         viewPager_timetable.setAdapter(adapter);
