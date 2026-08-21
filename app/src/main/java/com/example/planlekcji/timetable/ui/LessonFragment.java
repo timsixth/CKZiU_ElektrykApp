@@ -1,7 +1,6 @@
 package com.example.planlekcji.timetable.ui;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -26,7 +25,6 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.LessonDetails;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SchoolClass;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SingleLesson;
-import com.example.planlekcji.settings.GroupPreferenceManager;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 import com.example.planlekcji.utils.EmptyStateHelper;
 import com.example.planlekcji.utils.EmptyStateType;
@@ -97,11 +95,6 @@ public class LessonFragment extends Fragment {
             return;
         }
 
-        SharedPreferences sharedPref = MainActivity.getContext().getSharedPreferences("sharedPrefs", 0);
-        SchoolEntryType timetableType = MainActivity.getTimetableType();
-        String classToken = (timetableType == SchoolEntryType.CLASSES) ? sharedPref.getString(getString(R.string.classTokenKey), "") : "";
-        boolean hideUnselected = GroupPreferenceManager.isHideUnselected(sharedPref);
-
         List<TimetableCardItem> cardItems = new ArrayList<>();
         Set<Integer> coveredNumbers = new HashSet<>();
         int minLessonNumber = Integer.MAX_VALUE;
@@ -120,16 +113,7 @@ public class LessonFragment extends Fragment {
                 rawDetailsList = Collections.emptyList();
             }
 
-            List<LessonDetails> detailsList;
-            if (timetableType == SchoolEntryType.CLASSES && !classToken.isEmpty() && hideUnselected) {
-                detailsList = filterLessonDetails(rawDetailsList, classToken, sharedPref);
-                // If all groups in this lesson were filtered out, skip this lesson
-                if (!rawDetailsList.isEmpty() && detailsList.isEmpty()) {
-                    continue;
-                }
-            } else {
-                detailsList = rawDetailsList;
-            }
+            List<LessonDetails> detailsList = rawDetailsList;
 
             for (int num : nums) {
                 coveredNumbers.add(num);
@@ -207,22 +191,6 @@ public class LessonFragment extends Fragment {
                 for (int idx = 0; idx < detailsList.size(); idx++) {
                     LessonDetails details = detailsList.get(idx);
 
-                    boolean isDimmed = false;
-                    if (timetableType == SchoolEntryType.CLASSES && !classToken.isEmpty() && !hideUnselected) {
-                        if (details.getSubject() != null) {
-                            String subName = details.getSubject().name();
-                            if (subName != null) {
-                                String chosen = GroupPreferenceManager.getChoice(sharedPref, classToken, subName.trim());
-                                if (chosen != null) {
-                                    List<String> labels = GroupPreferenceManager.extractLabelsFromDetails(details);
-                                    if (!labels.contains(chosen)) {
-                                        isDimmed = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     // Add subtle divider between multiple lessons in the same time slot
                     if (idx > 0) {
                         View itemDivider = new View(context);
@@ -244,11 +212,7 @@ public class LessonFragment extends Fragment {
                     textSubject.setText(getSubjectText(details));
                     textMeta.setText(getMetaText(details));
 
-                    if (isDimmed) {
-                        rowView.setAlpha(0.35f);
-                        textSubject.setTextColor(Color.parseColor("#9E9E9E"));
-                        textMeta.setTextColor(Color.parseColor("#757575"));
-                    } else if (isCurrentLesson) {
+                    if (isCurrentLesson) {
                         textSubject.setTextColor(Color.WHITE);
                         textSubject.setTypeface(null, Typeface.BOLD);
                         textMeta.setTextColor(Color.parseColor("#FFD54F"));
@@ -292,37 +256,6 @@ public class LessonFragment extends Fragment {
 
             layout.addView(cardView);
         }
-    }
-
-    private List<LessonDetails> filterLessonDetails(List<LessonDetails> detailsList, String classToken, SharedPreferences sharedPref) {
-        if (detailsList == null || detailsList.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<LessonDetails> filtered = new ArrayList<>();
-        for (LessonDetails details : detailsList) {
-            if (details == null || details.getSubject() == null) {
-                filtered.add(details);
-                continue;
-            }
-
-            String subjectName = details.getSubject().name();
-            if (subjectName == null || subjectName.trim().isEmpty()) {
-                filtered.add(details);
-                continue;
-            }
-
-            String chosenGroup = GroupPreferenceManager.getChoice(sharedPref, classToken, subjectName.trim());
-            if (chosenGroup == null) {
-                filtered.add(details);
-            } else {
-                List<String> labels = GroupPreferenceManager.extractLabelsFromDetails(details);
-                if (labels.contains(chosenGroup)) {
-                    filtered.add(details);
-                }
-            }
-        }
-        return filtered;
     }
 
     private String getSubjectText(LessonDetails lessonDetails) {

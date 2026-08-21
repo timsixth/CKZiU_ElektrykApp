@@ -323,30 +323,6 @@
                         app:trackTint="@color/switch_track_color" />
                 </LinearLayout>
 
-                <!-- Dynamic container for subjects and their toggle groups -->
-                <LinearLayout
-                    android:id="@+id/layout_groupsContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="vertical" />
-
-                <!-- Reset Button -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_resetGroups"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="14dp"
-                    android:letterSpacing="0.02"
-                    android:text="@string/settings_groups_reset"
-                    android:textAllCaps="false"
-                    android:textColor="#FFC107"
-                    android:textSize="15sp"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="#5C4813"
-                    app:strokeWidth="1dp" />
-
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
