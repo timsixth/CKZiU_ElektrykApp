@@ -54,4 +54,5 @@
     <string name="settings_groups_lock_selection_description">Chroni przed przypadkową zmianą grup.</string>
     <string name="settings_groups_reset">Wyczyść wybory grup</string>
     <string name="settings_groups_reset_success">Wybory grup zostały zresetowane</string>
+    <string name="settings_groups_editing_locked">Edycja planu jest zablokowana w Ustawieniach</string>
 </resources>

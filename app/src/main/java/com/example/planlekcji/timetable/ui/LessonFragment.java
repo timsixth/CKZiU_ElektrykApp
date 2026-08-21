@@ -1,16 +1,19 @@
 package com.example.planlekcji.timetable.ui;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,6 +28,7 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.LessonDetails;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SchoolClass;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SingleLesson;
+import com.example.planlekcji.settings.GroupPreferenceManager;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 import com.example.planlekcji.utils.EmptyStateHelper;
 import com.example.planlekcji.utils.EmptyStateType;
@@ -94,6 +98,12 @@ public class LessonFragment extends Fragment {
             Log.e("TimetableLessonFragment", "lessonList is empty");
             return;
         }
+
+        SharedPreferences sharedPref = MainActivity.getContext().getSharedPreferences("sharedPrefs", 0);
+        SchoolEntryType timetableType = MainActivity.getTimetableType();
+        String classToken = (timetableType == SchoolEntryType.CLASSES) ? sharedPref.getString(getString(R.string.classTokenKey), "") : "";
+        boolean hideUnselected = GroupPreferenceManager.isHideUnselected(sharedPref);
+        boolean isClassesTimetable = (timetableType == SchoolEntryType.CLASSES) && !classToken.isEmpty();
 
         List<TimetableCardItem> cardItems = new ArrayList<>();
         Set<Integer> coveredNumbers = new HashSet<>();
@@ -185,13 +195,105 @@ public class LessonFragment extends Fragment {
             if (detailsList == null || detailsList.isEmpty()) {
                 viewLessonData.setVisibility(View.VISIBLE);
                 viewLessonData.setText("");
+            } else if (hideUnselected) {
+                // Hide unselected mode: filter out hidden lessons
+                List<LessonDetails> visibleDetails = new ArrayList<>();
+                for (LessonDetails d : detailsList) {
+                    if (!isClassesTimetable || !GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d)) {
+                        visibleDetails.add(d);
+                    }
+                }
+
+                if (visibleDetails.isEmpty()) {
+                    // All lessons in this card were hidden by the user -> show empty gap
+                    viewLessonData.setVisibility(View.VISIBLE);
+                    viewLessonData.setText("");
+
+                    if (isClassesTimetable) {
+                        cardView.setOnLongClickListener(v -> {
+                            if (GroupPreferenceManager.isLockSelection(sharedPref)) {
+                                Toast.makeText(context, R.string.settings_groups_editing_locked, Toast.LENGTH_SHORT).show();
+                                return true;
+                            }
+                            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                            for (LessonDetails d : detailsList) {
+                                GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, false);
+                            }
+                            populateCards();
+                            return true;
+                        });
+                    }
+                } else {
+                    viewLessonData.setVisibility(View.GONE);
+
+                    for (int idx = 0; idx < visibleDetails.size(); idx++) {
+                        LessonDetails details = visibleDetails.get(idx);
+
+                        if (idx > 0) {
+                            View itemDivider = new View(context);
+                            LinearLayout.LayoutParams divParams = new LinearLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    (int) (1 * getResources().getDisplayMetrics().density)
+                            );
+                            int marginV = (int) (3 * getResources().getDisplayMetrics().density);
+                            divParams.setMargins(0, marginV, 0, marginV);
+                            itemDivider.setLayoutParams(divParams);
+                            itemDivider.setBackgroundColor(isCurrentLesson ? Color.parseColor("#44FFC107") : Color.parseColor("#1FFFFFFF"));
+                            lessonsContainer.addView(itemDivider);
+                        }
+
+                        View rowView = inflater.inflate(R.layout.item_lesson_entry, lessonsContainer, false);
+                        TextView textSubject = rowView.findViewById(R.id.textView_lessonSubject);
+                        TextView textMeta = rowView.findViewById(R.id.textView_lessonMeta);
+
+                        textSubject.setText(getSubjectText(details));
+                        textMeta.setText(getMetaText(details));
+
+                        if (isCurrentLesson) {
+                            textSubject.setTextColor(Color.WHITE);
+                            textSubject.setTypeface(null, Typeface.BOLD);
+                            textMeta.setTextColor(Color.parseColor("#FFD54F"));
+                        }
+
+                        if (isClassesTimetable) {
+                            rowView.setOnLongClickListener(v -> {
+                                if (GroupPreferenceManager.isLockSelection(sharedPref)) {
+                                    Toast.makeText(context, R.string.settings_groups_editing_locked, Toast.LENGTH_SHORT).show();
+                                    return true;
+                                }
+                                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+
+                                if (detailsList.size() == 1) {
+                                    GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details, true);
+                                } else {
+                                    if (visibleDetails.size() == 1) {
+                                        // Only this one was visible -> reset all in card to visible
+                                        for (LessonDetails d : detailsList) {
+                                            GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, false);
+                                        }
+                                    } else {
+                                        // Select this one -> keep this, hide other details in this card
+                                        for (LessonDetails d : detailsList) {
+                                            boolean hide = (d != details);
+                                            GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, hide);
+                                        }
+                                    }
+                                }
+                                populateCards();
+                                return true;
+                            });
+                        }
+
+                        lessonsContainer.addView(rowView);
+                    }
+                }
             } else {
+                // Dim unselected mode: render all lessons, dim hidden ones
                 viewLessonData.setVisibility(View.GONE);
 
                 for (int idx = 0; idx < detailsList.size(); idx++) {
                     LessonDetails details = detailsList.get(idx);
 
-                    // Add subtle divider between multiple lessons in the same time slot
                     if (idx > 0) {
                         View itemDivider = new View(context);
                         LinearLayout.LayoutParams divParams = new LinearLayout.LayoutParams(
@@ -212,10 +314,55 @@ public class LessonFragment extends Fragment {
                     textSubject.setText(getSubjectText(details));
                     textMeta.setText(getMetaText(details));
 
-                    if (isCurrentLesson) {
+                    boolean isHidden = isClassesTimetable && GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details);
+
+                    if (isHidden) {
+                        rowView.setAlpha(0.35f);
+                        textSubject.setTextColor(Color.parseColor("#9E9E9E"));
+                        textMeta.setTextColor(Color.parseColor("#757575"));
+                    } else if (isCurrentLesson) {
                         textSubject.setTextColor(Color.WHITE);
                         textSubject.setTypeface(null, Typeface.BOLD);
                         textMeta.setTextColor(Color.parseColor("#FFD54F"));
+                    }
+
+                    if (isClassesTimetable) {
+                        rowView.setOnLongClickListener(v -> {
+                            if (GroupPreferenceManager.isLockSelection(sharedPref)) {
+                                Toast.makeText(context, R.string.settings_groups_editing_locked, Toast.LENGTH_SHORT).show();
+                                return true;
+                            }
+                            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+
+                            if (detailsList.size() == 1) {
+                                GroupPreferenceManager.toggleLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details);
+                            } else {
+                                boolean isCurrentlyHidden = GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details);
+                                if (isCurrentlyHidden) {
+                                    GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details, false);
+                                } else {
+                                    boolean anyOtherHidden = false;
+                                    for (LessonDetails d : detailsList) {
+                                        if (d != details && GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d)) {
+                                            anyOtherHidden = true;
+                                            break;
+                                        }
+                                    }
+                                    if (anyOtherHidden) {
+                                        for (LessonDetails d : detailsList) {
+                                            GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, false);
+                                        }
+                                    } else {
+                                        for (LessonDetails d : detailsList) {
+                                            boolean hide = (d != details);
+                                            GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, hide);
+                                        }
+                                    }
+                                }
+                            }
+                            populateCards();
+                            return true;
+                        });
                     }
 
                     lessonsContainer.addView(rowView);
