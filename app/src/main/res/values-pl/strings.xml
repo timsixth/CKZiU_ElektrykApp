@@ -47,8 +47,11 @@
     <string name="settings_offline_notice_title">Wymagane połączenie z internetem</string>
     <string name="settings_offline_notice_description">Zmiana planu lekcji lub typu planu wymaga połączenia z internetem. Połącz się z siecią, aby zmienić te ustawienia.</string>
     <string name="settings_groups_title">Moje grupy</string>
-    <string name="settings_groups_description">Wybierz grupy, do których należysz.\nPozostałe zostaną przyciemnione na planie lekcji.</string>
+    <string name="settings_groups_description">Przytrzymaj kafelek danej lekcji na planie lekcji, aby wybrać swoją grupę lub odznaczyć zajęcia.</string>
     <string name="settings_groups_hide_unselected">Ukryj odznaczone grupy</string>
-    <string name="settings_groups_hide_unselected_description">Całkowicie ukrywa odznaczone grupy zamiast ich przyciemniania. \nUwaga: tryb ten jest wrażliwy na błędy w planie szkoły (np. brak wpisanego nauczyciela lub sali).</string>
-    <string name="settings_groups_reset">Resetuj wybory</string>
+    <string name="settings_groups_hide_unselected_description">Całkowicie ukrywa odznaczone lekcje zamiast ich przyciemniania.</string>
+    <string name="settings_groups_lock_selection">Zablokuj edycję na planie</string>
+    <string name="settings_groups_lock_selection_description">Chroni przed przypadkową zmianą grup.</string>
+    <string name="settings_groups_reset">Wyczyść wybory grup</string>
+    <string name="settings_groups_reset_success">Wybory grup zostały zresetowane</string>
 </resources>

@@ -55,8 +55,11 @@
     <string name="settings_offline_notice_title">Internet connection required</string>
     <string name="settings_offline_notice_description">Changing the timetable or user type requires an internet connection. Connect to the internet to change these settings.</string>
     <string name="settings_groups_title">My groups</string>
-    <string name="settings_groups_description">Select the groups you belong to.\nOther groups will be dimmed on the timetable.</string>
+    <string name="settings_groups_description">Press and hold a lesson tile directly on the timetable to select your group or hide a free period.</string>
     <string name="settings_groups_hide_unselected">Hide unselected groups</string>
-    <string name="settings_groups_hide_unselected_description">Completely hides unselected groups instead of dimming them. \nNote: this mode is sensitive to school timetable errors (e.g. missing teacher or classroom).</string>
-    <string name="settings_groups_reset">Reset selection</string>
+    <string name="settings_groups_hide_unselected_description">Completely hides unselected lessons instead of dimming them.</string>
+    <string name="settings_groups_lock_selection">Lock editing on timetable</string>
+    <string name="settings_groups_lock_selection_description">Prevents accidental group changes when touching lesson tiles on the timetable.</string>
+    <string name="settings_groups_reset">Reset group selections</string>
+    <string name="settings_groups_reset_success">Group selections have been reset</string>
 </resources>

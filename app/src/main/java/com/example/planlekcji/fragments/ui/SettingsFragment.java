@@ -22,6 +22,8 @@ import com.example.planlekcji.settings.GroupPreferenceManager;
 import com.example.planlekcji.settings.SchoolEntriesDownloader;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
+import android.widget.Toast;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -81,6 +83,29 @@ public class SettingsFragment extends Fragment {
             }
         }
 
+        // Setup lock selection switch
+        SwitchMaterial switchLockSelection = view.findViewById(R.id.switch_lockSelection);
+        View layoutLockSwitch = view.findViewById(R.id.layout_lockSelectionSwitch);
+        if (switchLockSelection != null) {
+            switchLockSelection.setChecked(GroupPreferenceManager.isLockSelection(sharedPref));
+            switchLockSelection.setOnCheckedChangeListener((btn, isChecked) -> {
+                GroupPreferenceManager.setLockSelection(sharedPref, isChecked);
+            });
+            if (layoutLockSwitch != null) {
+                layoutLockSwitch.setOnClickListener(v -> switchLockSelection.toggle());
+            }
+        }
+
+        // Setup reset groups button
+        View buttonReset = view.findViewById(R.id.button_resetGroups);
+        if (buttonReset != null) {
+            buttonReset.setOnClickListener(v -> {
+                String classToken = sharedPref.getString(getString(R.string.classTokenKey), "");
+                GroupPreferenceManager.resetClassChoices(sharedPref, classToken);
+                Toast.makeText(requireContext(), R.string.settings_groups_reset_success, Toast.LENGTH_SHORT).show();
+            });
+        }
+
         // Initial visibility
         changeVisibility();
 
@@ -115,7 +140,6 @@ public class SettingsFragment extends Fragment {
         float alpha = isOnline ? 1.0f : 0.45f;
         if (cardTimetableType != null) cardTimetableType.setAlpha(alpha);
         if (cardSchoolEntries != null) cardSchoolEntries.setAlpha(alpha);
-        if (cardMyGroups != null) cardMyGroups.setAlpha(alpha);
 
         if (spinnerUserType != null) spinnerUserType.setEnabled(isOnline);
         if (spinnerClassTokens != null) spinnerClassTokens.setEnabled(isOnline);
