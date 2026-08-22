@@ -355,26 +355,25 @@ public class LessonFragment extends Fragment {
                             if (detailsList.size() == 1) {
                                 GroupPreferenceManager.toggleLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details);
                             } else {
-                                boolean isCurrentlyHidden = GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details);
-                                if (isCurrentlyHidden) {
-                                    GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details, false);
-                                } else {
-                                    boolean anyOtherHidden = false;
-                                    for (LessonDetails d : detailsList) {
-                                        if (d != details && GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d)) {
-                                            anyOtherHidden = true;
-                                            break;
-                                        }
+                                boolean isThisCurrentlyActive = !GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, details);
+                                boolean areAllOthersHidden = true;
+                                for (LessonDetails d : detailsList) {
+                                    if (d != details && !GroupPreferenceManager.isLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d)) {
+                                        areAllOthersHidden = false;
+                                        break;
                                     }
-                                    if (anyOtherHidden) {
-                                        for (LessonDetails d : detailsList) {
-                                            GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, false);
-                                        }
-                                    } else {
-                                        for (LessonDetails d : detailsList) {
-                                            boolean hide = (d != details);
-                                            GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, hide);
-                                        }
+                                }
+
+                                if (isThisCurrentlyActive && areAllOthersHidden) {
+                                    // Deselect: unhide all lessons in this card
+                                    for (LessonDetails d : detailsList) {
+                                        GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, false);
+                                    }
+                                } else {
+                                    // Select this lesson: keep this active, hide/dim all others in this card
+                                    for (LessonDetails d : detailsList) {
+                                        boolean hide = (d != details);
+                                        GroupPreferenceManager.setLessonHidden(sharedPref, classToken, thisDayNumber, item.startNumber, d, hide);
                                     }
                                 }
                             }
