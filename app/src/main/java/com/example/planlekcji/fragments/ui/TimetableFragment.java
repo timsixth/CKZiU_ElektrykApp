@@ -33,6 +33,8 @@ public class TimetableFragment extends Fragment {
     private View view;
     private LinearLayout emptyStateContainer;
 
+    private boolean isInitialDaySet = false;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_timetable, container, false);
@@ -56,14 +58,6 @@ public class TimetableFragment extends Fragment {
         return view;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (timetableMap != null && !timetableMap.isEmpty() && viewPager_timetable != null) {
-            setAdapterToViewPager();
-        }
-    }
-
     private void setAdapterToViewPager() {
         Adapter adapter = new Adapter(getChildFragmentManager(), getLifecycle(), timetableMap);
         viewPager_timetable.setAdapter(adapter);
@@ -75,6 +69,7 @@ public class TimetableFragment extends Fragment {
 
             if (timetableMap == null || timetableMap.isEmpty()) {
                 showEmptyState();
+                isInitialDaySet = false;
                 return;
             }
 
@@ -82,7 +77,11 @@ public class TimetableFragment extends Fragment {
             setAdapterToViewPager();
 
             setHeadersToTabLayout();
-            setCurrentDay();
+
+            if (!isInitialDaySet) {
+                setCurrentDay();
+                isInitialDaySet = true;
+            }
         });
     }
 
