@@ -26,6 +26,7 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.GroupLesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.LessonDetails;
+import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.LessonDuration;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SchoolClass;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.SingleLesson;
 import com.example.planlekcji.settings.GroupPreferenceManager;
@@ -39,7 +40,9 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -105,7 +108,7 @@ public class LessonFragment extends Fragment {
         boolean hideUnselected = GroupPreferenceManager.isHideUnselected(sharedPref);
         boolean isClassesTimetable = (timetableType == SchoolEntryType.CLASSES) && !classToken.isEmpty();
 
-        List<TimetableCardItem> cardItems = new ArrayList<>();
+        Map<String, TimetableCardItemBuilder> cardMap = new LinkedHashMap<>();
         Set<Integer> coveredNumbers = new HashSet<>();
         int minLessonNumber = Integer.MAX_VALUE;
         int maxLessonNumber = Integer.MIN_VALUE;
@@ -123,8 +126,6 @@ public class LessonFragment extends Fragment {
                 rawDetailsList = Collections.emptyList();
             }
 
-            List<LessonDetails> detailsList = rawDetailsList;
-
             for (int num : nums) {
                 coveredNumbers.add(num);
                 if (num < minLessonNumber) minLessonNumber = num;
@@ -134,15 +135,32 @@ public class LessonFragment extends Fragment {
             int firstNum = Collections.min(nums);
             int lastNum = Collections.max(nums);
             boolean isMerged = (firstNum != lastNum);
-            String singleNumberText = isMerged ? "" : String.valueOf(firstNum);
+            String slotKey = isMerged ? (firstNum + "_" + lastNum) : String.valueOf(firstNum);
 
-            String timeRange = "";
-            if (lesson.getDuration() != null && lesson.getDuration().startTime() != null && lesson.getDuration().endTime() != null) {
-                timeRange = lesson.getDuration().startTime().toString() + " - " + lesson.getDuration().endTime().toString();
+            TimetableCardItemBuilder builder = cardMap.get(slotKey);
+            if (builder == null) {
+                builder = new TimetableCardItemBuilder(isMerged, firstNum, lastNum);
+                cardMap.put(slotKey, builder);
             }
 
-            boolean isCurrentLesson = isLessonCurrentlyActive(tabNumber, lesson);
-            cardItems.add(new TimetableCardItem(isMerged, firstNum, lastNum, singleNumberText, timeRange, detailsList, isCurrentLesson, firstNum));
+            if (lesson.getDuration() != null) {
+                builder.updateDuration(lesson.getDuration(), isMerged);
+            }
+
+            if (lesson.getDuration() != null && isLessonCurrentlyActive(tabNumber, lesson.getDuration(), isMerged)) {
+                builder.isCurrent = true;
+            }
+
+            for (LessonDetails details : rawDetailsList) {
+                if (details != null && !builder.containsDetails(details)) {
+                    builder.detailsList.add(details);
+                }
+            }
+        }
+
+        List<TimetableCardItem> cardItems = new ArrayList<>();
+        for (TimetableCardItemBuilder builder : cardMap.values()) {
+            cardItems.add(builder.build());
         }
 
         // No lessons scheduled for this day
@@ -449,17 +467,50 @@ public class LessonFragment extends Fragment {
         }
     }
 
+    private static int getLessonStartMinutes(LessonDuration duration, boolean isMerged) {
+        if (duration == null || duration.startTime() == null || duration.endTime() == null) {
+            return 0;
+        }
+        int startMins = duration.startTime().getHours() * 60 + duration.startTime().getMinutes();
+        int endMins = duration.endTime().getHours() * 60 + duration.endTime().getMinutes();
+        if (!isMerged && (endMins - startMins > 55)) {
+            return endMins - 45;
+        }
+        return startMins;
+    }
+
+    private static int getLessonEndMinutes(LessonDuration duration) {
+        if (duration == null || duration.endTime() == null) {
+            return 0;
+        }
+        return duration.endTime().getHours() * 60 + duration.endTime().getMinutes();
+    }
+
+    private static String formatTimeRange(LessonDuration duration, boolean isMerged) {
+        if (duration == null || duration.startTime() == null || duration.endTime() == null) {
+            return "";
+        }
+        int startMins = getLessonStartMinutes(duration, isMerged);
+        int endMins = getLessonEndMinutes(duration);
+
+        int sH = startMins / 60;
+        int sM = startMins % 60;
+        int eH = endMins / 60;
+        int eM = endMins % 60;
+
+        return String.format(Locale.US, "%02d:%02d - %02d:%02d", sH, sM, eH, eM);
+    }
+
     /**
      * Determines whether the given lesson is currently active based on system time and lesson duration.
      *
      * @param tabNumber Tab day index (1 = Monday, 2 = Tuesday, etc.)
-     * @param lesson    The lesson to check
+     * @param duration  The lesson duration
+     * @param isMerged  Whether this is a merged multi-hour lesson
      * @return True if the lesson is currently active.
      */
-    private boolean isLessonCurrentlyActive(int tabNumber, Lesson lesson) {
-        if (lesson == null || lesson.getDuration() == null
-                || lesson.getDuration().startTime() == null
-                || lesson.getDuration().endTime() == null) {
+    private boolean isLessonCurrentlyActive(int tabNumber, LessonDuration duration, boolean isMerged) {
+        if (duration == null || duration.startTime() == null || duration.endTime() == null) {
             return false;
         }
 
@@ -469,31 +520,73 @@ public class LessonFragment extends Fragment {
         if (dayOfWeek != tabNumber) return false;
 
         int currentMinutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
-        int startMinutes = lesson.getDuration().startTime().getHours() * 60 + lesson.getDuration().startTime().getMinutes();
-        int endMinutes = lesson.getDuration().endTime().getHours() * 60 + lesson.getDuration().endTime().getMinutes();
+        int startMinutes = getLessonStartMinutes(duration, isMerged);
+        int endMinutes = getLessonEndMinutes(duration);
 
         return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
     }
 
-    private static class TimetableCardItem {
+    private static class TimetableCardItemBuilder {
         final boolean isMerged;
         final int startNumber;
         final int endNumber;
-        final String singleNumberText;
-        final String timeRange;
-        final List<LessonDetails> detailsList;
-        final boolean isCurrent;
-        final int sortOrder;
+        final List<LessonDetails> detailsList = new ArrayList<>();
+        LessonDuration bestDuration;
+        boolean isCurrent = false;
 
-        TimetableCardItem(boolean isMerged, int startNumber, int endNumber, String singleNumberText, String timeRange, List<LessonDetails> detailsList, boolean isCurrent, int sortOrder) {
+        TimetableCardItemBuilder(boolean isMerged, int startNumber, int endNumber) {
             this.isMerged = isMerged;
             this.startNumber = startNumber;
             this.endNumber = endNumber;
-            this.singleNumberText = singleNumberText;
-            this.timeRange = timeRange;
-            this.detailsList = detailsList;
-            this.isCurrent = isCurrent;
-            this.sortOrder = sortOrder;
+        }
+
+        void updateDuration(LessonDuration duration, boolean isMerged) {
+            if (duration == null || duration.startTime() == null || duration.endTime() == null) return;
+            if (bestDuration == null) {
+                bestDuration = duration;
+                return;
+            }
+            int currentSpan = (bestDuration.endTime().getHours() * 60 + bestDuration.endTime().getMinutes())
+                    - (bestDuration.startTime().getHours() * 60 + bestDuration.startTime().getMinutes());
+            int newSpan = (duration.endTime().getHours() * 60 + duration.endTime().getMinutes())
+                    - (duration.startTime().getHours() * 60 + duration.startTime().getMinutes());
+
+            if (!isMerged && newSpan <= 55 && currentSpan > 55) {
+                bestDuration = duration;
+            }
+        }
+
+        boolean containsDetails(LessonDetails newDetails) {
+            String newSub = GroupPreferenceManager.getSubjectName(newDetails);
+            String newTeacher = GroupPreferenceManager.getTeacher(newDetails);
+            String newRoom = GroupPreferenceManager.getClassroom(newDetails);
+            for (LessonDetails d : detailsList) {
+                if (GroupPreferenceManager.getSubjectName(d).equals(newSub)
+                        && GroupPreferenceManager.getTeacher(d).equals(newTeacher)
+                        && GroupPreferenceManager.getClassroom(d).equals(newRoom)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        TimetableCardItem build() {
+            String singleNumberText = isMerged ? "" : String.valueOf(startNumber);
+            String timeRange = formatTimeRange(bestDuration, isMerged);
+            return new TimetableCardItem(isMerged, startNumber, endNumber, singleNumberText, timeRange, detailsList, isCurrent, startNumber);
         }
     }
+
+    private record TimetableCardItem(
+            boolean isMerged,
+            int startNumber,
+            int endNumber,
+            String singleNumberText,
+            String timeRange,
+
+            List<LessonDetails> detailsList,
+            boolean isCurrent,
+
+            int sortOrder
+    ) { }
 }
