@@ -9,7 +9,6 @@ import com.example.planlekcji.ckziu_elektryk.client.Config;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.AbstractTimetableService;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.TimetableService;
-import com.example.planlekcji.ckziu_elektryk.client.timetable.info.TimetableInfo;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.database.DatabaseCacheManager;
 import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
@@ -20,7 +19,6 @@ import com.google.gson.JsonParser;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class TimetableDataDownloader implements Runnable {
     private final TimetableDownloadCompleteListener listener;
@@ -59,20 +57,13 @@ public class TimetableDataDownloader implements Runnable {
             }
         }
 
+        if (token.isEmpty()) {
+            Log.e("TimetableDownloader", "Token is empty");
+            listener.onDownloadFailed();
+            return;
+        }
+
         try {
-            Optional<TimetableInfo> timetableInfoOptional = client.getTimetableInfo();
-
-            if (timetableInfoOptional.isEmpty()) {
-                listener.onDownloadFailed();
-                return;
-            }
-
-            if (token.isEmpty()) {
-                Log.e("Error", "Token is empty");
-                listener.onDownloadFailed();
-                return;
-            }
-
             TimetableService timetableService = client.getTimetableService(schoolEntryType);
             JsonObject jsonObject = timetableService.getTimetableJsonObject(token);
 
