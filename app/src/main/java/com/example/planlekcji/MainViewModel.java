@@ -208,4 +208,14 @@ public class MainViewModel extends ViewModel {
     public CKZiUElektrykClient getClient() {
         return client;
     }
+
+    private boolean settingsChanged = false;
+
+    public boolean isSettingsChanged() {
+        return settingsChanged;
+    }
+
+    public void setSettingsChanged(boolean settingsChanged) {
+        this.settingsChanged = settingsChanged;
+    }
 }

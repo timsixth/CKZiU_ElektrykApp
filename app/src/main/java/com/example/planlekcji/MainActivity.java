@@ -110,6 +110,28 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }).attach();
+
+        tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                // Update data upon exiting settings if settings have changed
+                if (tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
+                    if (mainViewModel.isSettingsChanged()) {
+                        mainViewModel.setSettingsChanged(false);
+                        if (isOnline()) {
+                            mainViewModel.fetchTimetable();
+                            mainViewModel.fetchReplacements();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
     }
 
     @Override

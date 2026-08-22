@@ -35,24 +35,6 @@ public class SettingsFragment extends Fragment {
     private List<SchoolEntry> classroomsSchoolEntries = new ArrayList<>();
     private View view;
     private MainViewModel mainViewModel;
-    private final Handler fetchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-    private final Runnable fetchRunnable = () -> {
-        if (isAdded() && mainViewModel != null) {
-            mainViewModel.fetchTimetable();
-            mainViewModel.fetchReplacements();
-        }
-    };
-
-    private void scheduleDataFetch() {
-        fetchHandler.removeCallbacks(fetchRunnable);
-        fetchHandler.postDelayed(fetchRunnable, 150);
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        fetchHandler.removeCallbacks(fetchRunnable);
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -225,7 +207,9 @@ public class SettingsFragment extends Fragment {
                     editor.putString(sharedPreferencesToken, newToken);
                     editor.apply();
 
-                    scheduleDataFetch();
+                    if (mainViewModel != null) {
+                        mainViewModel.setSettingsChanged(true);
+                    }
                 }
             }
 
@@ -258,7 +242,10 @@ public class SettingsFragment extends Fragment {
                     editor.apply();
 
                     changeVisibility();
-                    scheduleDataFetch();
+
+                    if (mainViewModel != null) {
+                        mainViewModel.setSettingsChanged(true);
+                    }
                 }
             }
 
