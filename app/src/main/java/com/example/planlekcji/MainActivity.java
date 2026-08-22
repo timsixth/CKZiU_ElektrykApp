@@ -111,20 +111,37 @@ public class MainActivity extends AppCompatActivity {
             }
         }).attach();
 
+        mainViewModel.setReplacementsNeedsRefresh(true);
+
         tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
-            public void onTabSelected(TabLayout.Tab tab) {}
+            public void onTabSelected(TabLayout.Tab tab) {
+                int position = tab.getPosition();
+                if (position == ViewPagerAdapter.TIMETABLE_TAB_ID) {
+                    if (mainViewModel.isTimetableNeedsRefresh()) {
+                        mainViewModel.setTimetableNeedsRefresh(false);
+                        if (isOnline()) {
+                            mainViewModel.fetchTimetable();
+                        }
+                    }
+                } else if (position == ViewPagerAdapter.REPLACEMENTS_TAB_ID) {
+                    if (mainViewModel.isReplacementsNeedsRefresh()) {
+                        mainViewModel.setReplacementsNeedsRefresh(false);
+                        if (isOnline()) {
+                            mainViewModel.fetchReplacements();
+                        }
+                    }
+                }
+            }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-                // Update data upon exiting settings if settings have changed
+                // When exiting settings after changes, mark dependent tabs as needing refresh
                 if (tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
                     if (mainViewModel.isSettingsChanged()) {
                         mainViewModel.setSettingsChanged(false);
-                        if (isOnline()) {
-                            mainViewModel.fetchTimetable();
-                            mainViewModel.fetchReplacements();
-                        }
+                        mainViewModel.setTimetableNeedsRefresh(true);
+                        mainViewModel.setReplacementsNeedsRefresh(true);
                     }
                 }
             }

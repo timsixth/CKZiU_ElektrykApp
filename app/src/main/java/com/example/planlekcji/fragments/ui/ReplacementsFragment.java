@@ -42,7 +42,6 @@ public class ReplacementsFragment extends Fragment {
 
         observeAndHandleReplacementsLiveData();
         layout.addView(EmptyStateHelper.create(inflater, layout, EmptyStateType.REPLACEMENTS));
-        this.mainViewModel.fetchReplacements();
 
         return view;
     }
