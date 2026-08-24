@@ -20,7 +20,6 @@ import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
 import com.example.planlekcji.replacements.ReplacementDataDownloader;
 import com.example.planlekcji.timetable.TimetableDataDownloader;
 import com.example.planlekcji.timetable.model.DayOfWeek;
-import com.example.planlekcji.utils.RetryHandler;
 import com.example.planlekcji.utils.ToastUtils;
 
 import java.util.List;
@@ -40,12 +39,6 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<Boolean> isLoadingTimetable = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoadingArticles = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoadingCalendar = new MutableLiveData<>(false);
-
-    // Retry handlers
-    private final RetryHandler replaceRetryHandler = new RetryHandler(this::startReplacementDownload);
-    private final RetryHandler timetableRetryHandler = new RetryHandler(this::startTimetableDownload);
-    private final RetryHandler articlesRetryHandler = new RetryHandler(this::startArticlesDownload);
-    private final RetryHandler calendarRetryHandler = new RetryHandler(this::startCalendarDownload);
 
     public MainViewModel() {
         client = new CKZiUElektrykClient();
@@ -107,7 +100,6 @@ public class MainViewModel extends ViewModel {
             @Override
             public void onDownloadFailed() {
                 isLoadingReplacements.postValue(false);
-                replaceRetryHandler.handleRetry();
             }
         });
         new Thread(downloader).start();
@@ -130,7 +122,6 @@ public class MainViewModel extends ViewModel {
             @Override
             public void onDownloadFailed() {
                 isLoadingTimetable.postValue(false);
-                timetableRetryHandler.handleRetry();
             }
         });
         new Thread(downloader).start();
@@ -148,7 +139,6 @@ public class MainViewModel extends ViewModel {
             @Override
             public void onDownloadFailed() {
                 isLoadingArticles.postValue(false);
-                articlesRetryHandler.handleRetry();
             }
         });
         new Thread(downloader).start();
@@ -166,7 +156,6 @@ public class MainViewModel extends ViewModel {
             @Override
             public void onDownloadFailed() {
                 isLoadingCalendar.postValue(false);
-                calendarRetryHandler.handleRetry();
             }
         });
         new Thread(downloader).start();
