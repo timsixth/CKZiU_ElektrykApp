@@ -7,8 +7,10 @@ import java.util.Collection;
 import java.util.Map;
 
 public class RefreshCooldownManager {
+    public static final long DEFAULT_MANUAL_COOLDOWN_MS = 3 * 60 * 1000L;
     private static final String PREFS_NAME = "refresh_cooldown_prefs";
     private static final String KEY_PREFIX = "last_refresh_";
+
     private static RefreshCooldownManager instance;
     private final SharedPreferences prefs;
 
@@ -55,6 +57,10 @@ public class RefreshCooldownManager {
             if (item instanceof Map<?, ?> && ((Map<?, ?>) item).isEmpty()) return false;
         }
         return !shouldRefresh(type);
+    }
+
+    public boolean canManualRefresh(RefreshDataType type) {
+        return canManualRefresh(type, DEFAULT_MANUAL_COOLDOWN_MS);
     }
 
     public boolean canManualRefresh(RefreshDataType type, long cooldownMillis) {

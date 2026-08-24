@@ -7,13 +7,16 @@ import android.content.pm.ActivityInfo;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
@@ -65,12 +68,24 @@ public class MainActivity extends AppCompatActivity {
             if (layoutOfflineBanner != null) {
                 layoutOfflineBanner.setVisibility(Boolean.TRUE.equals(isOnline) ? View.GONE : View.VISIBLE);
             }
-            if (Boolean.TRUE.equals(isOnline)) {
-                // Mark all tabs as needing refresh, then fetch only the currently visible one
-                mainViewModel.markAllAsNeedsRefresh();
-                triggerCurrentTabFetch(viewPager2_appContent);
-            }
         });
+
+        // Swipe to Refresh
+        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefresh_main);
+        if (swipeRefresh != null) {
+            swipeRefresh.setProgressBackgroundColorSchemeColor(Color.parseColor("#2C2C2C"));
+            swipeRefresh.setColorSchemeColors(Color.parseColor("#FFC107"));
+            swipeRefresh.setOnRefreshListener(() -> {
+                int currentTab = viewPager2_appContent.getCurrentItem();
+                switch (currentTab) {
+                    case ViewPagerAdapter.TIMETABLE_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.TIMETABLE, () -> mainViewModel.fetchTimetable());
+                    case ViewPagerAdapter.REPLACEMENTS_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.REPLACEMENTS, () -> mainViewModel.fetchReplacements());
+                    case ViewPagerAdapter.ARTICLES_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.ARTICLES, () -> mainViewModel.forceFetchArticles());
+                    case ViewPagerAdapter.CALENDAR_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.CALENDAR, () -> mainViewModel.forceFetchCalendar());
+                    default -> swipeRefresh.setRefreshing(false);
+                }
+            });
+        }
 
         // Progress bar
         ProgressBar progressBar = findViewById(R.id.progressBar);
@@ -81,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
                     || Boolean.TRUE.equals(mainViewModel.getIsLoadingArticles().getValue())
                     || Boolean.TRUE.equals(mainViewModel.getIsLoadingCalendar().getValue());
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            if (!isLoading && swipeRefresh != null) {
+                swipeRefresh.setRefreshing(false);
+            }
         };
 
         mainViewModel.getIsLoadingReplacements().observe(this, loadingObserver);
@@ -118,6 +136,9 @@ public class MainActivity extends AppCompatActivity {
         tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+                if (swipeRefresh != null) {
+                    swipeRefresh.setEnabled(tab.getPosition() != ViewPagerAdapter.SETTINGS_TAB_ID);
+                }
                 triggerTabFetch(tab.getPosition());
             }
 
@@ -145,6 +166,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Trigger initial data load for the default visible tab (both online and offline)
         triggerCurrentTabFetch(viewPager2_appContent);
+    }
+
+    private void handleManualRefresh(SwipeRefreshLayout swipeRefresh, RefreshDataType type, Runnable refreshAction) {
+        RefreshCooldownManager cooldown = RefreshCooldownManager.getInstance(this);
+        if (cooldown != null && !cooldown.canManualRefresh(type)) {
+            swipeRefresh.setRefreshing(false);
+            Toast.makeText(this, R.string.refresh_up_to_date, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        refreshAction.run();
     }
 
     private void triggerCurrentTabFetch(ViewPager2 viewPager) {

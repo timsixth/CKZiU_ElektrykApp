@@ -20,6 +20,8 @@ import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
 import com.example.planlekcji.replacements.ReplacementDataDownloader;
 import com.example.planlekcji.timetable.TimetableDataDownloader;
 import com.example.planlekcji.timetable.model.DayOfWeek;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 import com.example.planlekcji.utils.ToastUtils;
 
 import java.util.List;
@@ -79,7 +81,23 @@ public class MainViewModel extends ViewModel {
         startArticlesDownload();
     }
 
+    public void forceFetchArticles() {
+        Context context = MainActivity.getContext();
+        if (context != null) {
+            RefreshCooldownManager.getInstance(context).invalidate(RefreshDataType.ARTICLES);
+        }
+        startArticlesDownload();
+    }
+
     public void fetchCalendar() {
+        startCalendarDownload();
+    }
+
+    public void forceFetchCalendar() {
+        Context context = MainActivity.getContext();
+        if (context != null) {
+            RefreshCooldownManager.getInstance(context).invalidate(RefreshDataType.CALENDAR);
+        }
         startCalendarDownload();
     }
 

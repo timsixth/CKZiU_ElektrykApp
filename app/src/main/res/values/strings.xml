@@ -62,4 +62,5 @@
     <string name="settings_groups_reset">Reset group selections</string>
     <string name="settings_groups_reset_success">Group selections have been reset</string>
     <string name="settings_groups_editing_locked">Timetable editing is locked in Settings</string>
+    <string name="refresh_up_to_date">Data is up to date</string>
 </resources>

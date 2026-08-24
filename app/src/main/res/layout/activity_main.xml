@@ -78,14 +78,21 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPager2_appContent"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh_main"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/tabLayout_navigate"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layout_offlineBanner" />
+        app:layout_constraintTop_toBottomOf="@+id/layout_offlineBanner">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager2_appContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -93,9 +100,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:indeterminateTint="#FFFFFF"
-        app:layout_constraintBottom_toBottomOf="@+id/tabLayout_navigate"
-        app:layout_constraintEnd_toEndOf="@+id/viewPager2_appContent"
-        app:layout_constraintStart_toStartOf="@+id/viewPager2_appContent"
-        app:layout_constraintTop_toTopOf="@+id/viewPager2_appContent" />
+        app:layout_constraintBottom_toBottomOf="@+id/swipeRefresh_main"
+        app:layout_constraintEnd_toEndOf="@+id/swipeRefresh_main"
+        app:layout_constraintStart_toStartOf="@+id/swipeRefresh_main"
+        app:layout_constraintTop_toTopOf="@+id/swipeRefresh_main" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

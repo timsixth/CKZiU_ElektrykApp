@@ -54,4 +54,5 @@
     <string name="settings_groups_reset">Wyczyść wybory grup</string>
     <string name="settings_groups_reset_success">Wybory grup zostały zresetowane</string>
     <string name="settings_groups_editing_locked">Edycja planu jest zablokowana w Ustawieniach</string>
+    <string name="refresh_up_to_date">Dane są aktualne</string>
 </resources>
