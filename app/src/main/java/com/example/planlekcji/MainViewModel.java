@@ -131,6 +131,11 @@ public class MainViewModel extends ViewModel {
         isLoadingArticles.postValue(true);
         ArticleDataDownloader downloader = new ArticleDataDownloader(client, new ArticlesDownloadCompleteListener() {
             @Override
+            public void onCacheLoaded(List<Article> articleList) {
+                articles.postValue(articleList);
+            }
+
+            @Override
             public void onDownloadComplete(List<Article> articleList) {
                 articles.postValue(articleList);
                 isLoadingArticles.postValue(false);
@@ -147,6 +152,11 @@ public class MainViewModel extends ViewModel {
     private void startCalendarDownload() {
         isLoadingCalendar.postValue(true);
         CalendarDataDownloader downloader = new CalendarDataDownloader(client, new CalendarDownloadCompleteListener() {
+            @Override
+            public void onCacheLoaded(Calendar calendarData) {
+                calendar.postValue(calendarData);
+            }
+
             @Override
             public void onDownloadComplete(Calendar calendarData) {
                 calendar.postValue(calendarData);

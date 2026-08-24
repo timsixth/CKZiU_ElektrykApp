@@ -8,6 +8,8 @@ import com.example.planlekcji.ckziu_elektryk.client.CKZiUElektrykClient;
 import com.example.planlekcji.ckziu_elektryk.client.calendar.Calendar;
 import com.example.planlekcji.database.DatabaseCacheManager;
 import com.example.planlekcji.listener.CalendarDownloadCompleteListener;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 
 import java.util.Optional;
 
@@ -24,16 +26,24 @@ public class CalendarDataDownloader implements Runnable {
     @Override
     public void run() {
         Context context = MainActivity.getContext();
+        Calendar cached = null;
 
         if (context != null) {
             try {
-                Calendar cached = DatabaseCacheManager.getInstance(context).getObject(CACHE_KEY, Calendar.class);
+                cached = DatabaseCacheManager.getInstance(context).getObject(CACHE_KEY, Calendar.class);
                 if (cached != null) {
-                    listener.onDownloadComplete(cached);
+                    listener.onCacheLoaded(cached);
                 }
             } catch (Exception e) {
                 Log.e("CalendarDownloader", "Failed to load cached calendar", e);
             }
+        }
+
+        // Complete immediately if cache is fresh within TTL
+        RefreshCooldownManager cooldown = (context != null) ? RefreshCooldownManager.getInstance(context) : null;
+        if (cooldown != null && cooldown.isFresh(RefreshDataType.CALENDAR, cached)) {
+            listener.onDownloadComplete(cached);
+            return;
         }
 
         try {
@@ -42,6 +52,9 @@ public class CalendarDataDownloader implements Runnable {
                 Calendar cal = calendarOpt.get();
                 if (context != null) {
                     DatabaseCacheManager.getInstance(context).saveObject(CACHE_KEY, cal);
+                    if (cooldown != null) {
+                        cooldown.recordRefresh(RefreshDataType.CALENDAR);
+                    }
                 }
                 listener.onDownloadComplete(cal);
             } else {

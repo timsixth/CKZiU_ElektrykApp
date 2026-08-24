@@ -10,6 +10,8 @@ import com.example.planlekcji.ckziu_elektryk.client.article.ArticleService;
 import com.example.planlekcji.ckziu_elektryk.client.pagination.Page;
 import com.example.planlekcji.database.DatabaseCacheManager;
 import com.example.planlekcji.listener.ArticlesDownloadCompleteListener;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -29,17 +31,25 @@ public class ArticleDataDownloader implements Runnable {
     public void run() {
         Context context = MainActivity.getContext();
         Type listType = new TypeToken<List<Article>>(){}.getType();
+        List<Article> cached = null;
 
         // Cache-First: immediately emit cached articles if available
         if (context != null) {
             try {
-                List<Article> cached = DatabaseCacheManager.getInstance(context).getObject(CACHE_KEY, listType);
+                cached = DatabaseCacheManager.getInstance(context).getObject(CACHE_KEY, listType);
                 if (cached != null && !cached.isEmpty()) {
-                    listener.onDownloadComplete(cached);
+                    listener.onCacheLoaded(cached);
                 }
             } catch (Exception e) {
                 Log.e("ArticleDownloader", "Failed to load cached articles", e);
             }
+        }
+
+        // Complete immediately if cache is fresh within TTL
+        RefreshCooldownManager cooldown = (context != null) ? RefreshCooldownManager.getInstance(context) : null;
+        if (cooldown != null && cooldown.isFresh(RefreshDataType.ARTICLES, cached)) {
+            listener.onDownloadComplete(cached);
+            return;
         }
 
         try {
@@ -50,6 +60,9 @@ public class ArticleDataDownloader implements Runnable {
                 List<Article> articles = articlesPage.data();
                 if (context != null && !articles.isEmpty()) {
                     DatabaseCacheManager.getInstance(context).saveObject(CACHE_KEY, articles);
+                    if (cooldown != null) {
+                        cooldown.recordRefresh(RefreshDataType.ARTICLES);
+                    }
                 }
                 listener.onDownloadComplete(articles);
             } else {

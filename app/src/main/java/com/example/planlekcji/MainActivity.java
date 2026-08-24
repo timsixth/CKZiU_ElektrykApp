@@ -19,6 +19,8 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.fragments.model.ViewPagerAdapter;
 import com.example.planlekcji.utils.NetworkMonitor;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -127,6 +129,12 @@ public class MainActivity extends AppCompatActivity {
                         mainViewModel.setSettingsChanged(false);
                         mainViewModel.setTimetableNeedsRefresh(true);
                         mainViewModel.setReplacementsNeedsRefresh(true);
+
+                        RefreshCooldownManager cooldown = RefreshCooldownManager.getInstance(MainActivity.this);
+                        if (cooldown != null) {
+                            cooldown.invalidate(RefreshDataType.TIMETABLE);
+                            cooldown.invalidate(RefreshDataType.REPLACEMENTS);
+                        }
                     }
                 }
             }

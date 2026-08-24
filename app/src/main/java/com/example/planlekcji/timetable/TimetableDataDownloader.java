@@ -14,6 +14,8 @@ import com.example.planlekcji.database.DatabaseCacheManager;
 import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
 import com.example.planlekcji.preview.PreviewDataStore;
 import com.example.planlekcji.timetable.model.DayOfWeek;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -42,19 +44,27 @@ public class TimetableDataDownloader implements Runnable {
         // Cache first
         Context context = MainActivity.getContext();
         String cacheKey = "timetable_" + schoolEntryType.name() + "_" + token;
+        Map<DayOfWeek, List<Lesson>> cachedMap = null;
         if (context != null && !token.isEmpty()) {
             try {
                 String cachedJson = DatabaseCacheManager.getInstance(context).getRawJson(cacheKey);
                 if (cachedJson != null) {
                     JsonObject jsonObject = JsonParser.parseString(cachedJson).getAsJsonObject();
-                    Map<DayOfWeek, List<Lesson>> cachedMap = AbstractTimetableService.parseTimetable(jsonObject);
-                    if (cachedMap != null && !cachedMap.isEmpty()) {
+                    cachedMap = AbstractTimetableService.parseTimetable(jsonObject);
+                    if (!cachedMap.isEmpty()) {
                         listener.onCacheLoaded(cachedMap);
                     }
                 }
             } catch (Exception e) {
                 Log.e("TimetableDownloader", "Failed to load cached timetable", e);
             }
+        }
+
+        // Complete immediately if cache is fresh within TTL
+        RefreshCooldownManager cooldown = (context != null) ? RefreshCooldownManager.getInstance(context) : null;
+        if (cooldown != null && cooldown.isFresh(RefreshDataType.TIMETABLE, cachedMap)) {
+            listener.onDownloadComplete(cachedMap);
+            return;
         }
 
         if (token.isEmpty()) {
@@ -70,9 +80,12 @@ public class TimetableDataDownloader implements Runnable {
             if (jsonObject != null && !jsonObject.isEmpty()) {
                 if (context != null) {
                     DatabaseCacheManager.getInstance(context).saveRawJson(cacheKey, jsonObject.toString());
+                    if (cooldown != null) {
+                        cooldown.recordRefresh(RefreshDataType.TIMETABLE);
+                    }
                 }
                 Map<DayOfWeek, List<Lesson>> map = AbstractTimetableService.parseTimetable(jsonObject);
-                if (map != null && !map.isEmpty()) {
+                if (!map.isEmpty()) {
                     listener.onDownloadComplete(map);
                 } else {
                     listener.onDownloadFailed();

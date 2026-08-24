@@ -13,6 +13,8 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.database.DatabaseCacheManager;
 import com.example.planlekcji.listener.ReplacementsDownloadCompleteListener;
 import com.example.planlekcji.preview.PreviewDataStore;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -46,16 +48,24 @@ public class ReplacementDataDownloader implements Runnable {
         Context context = MainActivity.getContext();
         String cacheKey = "replacements_" + timetableType.name() + "_" + token;
         Type listType = new TypeToken<List<List<Replacement>>>(){}.getType();
+        List<List<Replacement>> cached = null;
 
         if (context != null && !token.isEmpty()) {
             try {
-                List<List<Replacement>> cached = DatabaseCacheManager.getInstance(context).getObject(cacheKey, listType);
+                cached = DatabaseCacheManager.getInstance(context).getObject(cacheKey, listType);
                 if (cached != null && !cached.isEmpty()) {
                     listener.onCacheLoaded(cached);
                 }
             } catch (Exception e) {
                 Log.e("ReplacementsDownloader", "Failed to load cached replacements", e);
             }
+        }
+
+        // Complete immediately if cache is fresh within TTL
+        RefreshCooldownManager cooldown = (context != null) ? RefreshCooldownManager.getInstance(context) : null;
+        if (cooldown != null && cooldown.isFresh(RefreshDataType.REPLACEMENTS, cached)) {
+            listener.onDownloadComplete(cached);
+            return;
         }
 
         try {
@@ -87,6 +97,9 @@ public class ReplacementDataDownloader implements Runnable {
             if (hasResponse) {
                 if (context != null && !token.isEmpty()) {
                     DatabaseCacheManager.getInstance(context).saveObject(cacheKey, latestReplacements);
+                    if (cooldown != null) {
+                        cooldown.recordRefresh(RefreshDataType.REPLACEMENTS);
+                    }
                 }
                 listener.onDownloadComplete(latestReplacements);
             } else {

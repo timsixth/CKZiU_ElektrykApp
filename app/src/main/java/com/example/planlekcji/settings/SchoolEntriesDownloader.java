@@ -11,6 +11,8 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.TimetableService;
 import com.example.planlekcji.database.DatabaseCacheManager;
 import com.example.planlekcji.preview.PreviewDataStore;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -59,13 +61,14 @@ public class SchoolEntriesDownloader implements Runnable {
             if (cachedClassrooms != null) classroomsSchoolEntries = cachedClassrooms;
         }
 
-        // If all three are already cached, skip the network call entirely
-        if (!classesSchoolEntries.isEmpty() && !teachersSchoolEntries.isEmpty() && !classroomsSchoolEntries.isEmpty()) {
+        // If all three are cached and TTL is not expired -> skip network
+        RefreshCooldownManager cooldown = (context != null) ? RefreshCooldownManager.getInstance(context) : null;
+        if (cooldown != null && cooldown.areAllFresh(RefreshDataType.SCHOOL_ENTRIES, classesSchoolEntries, teachersSchoolEntries, classroomsSchoolEntries)) {
             sortEntries();
             return;
         }
 
-        // Cache was empty (first run) – fetch from network
+        // Fetch from network (cache was empty or TTL expired)
         try {
             TimetableService timetableService = client.getTimetableService(SchoolEntryType.CLASSES);
             classesSchoolEntries = timetableService.getList();
@@ -85,6 +88,9 @@ public class SchoolEntriesDownloader implements Runnable {
                 }
                 if (classroomsSchoolEntries != null && !classroomsSchoolEntries.isEmpty()) {
                     DatabaseCacheManager.getInstance(context).saveObject(CACHE_CLASSROOMS, classroomsSchoolEntries);
+                }
+                if (cooldown != null) {
+                    cooldown.recordRefresh(RefreshDataType.SCHOOL_ENTRIES);
                 }
             }
         } catch (Exception e) {
