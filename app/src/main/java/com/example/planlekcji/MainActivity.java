@@ -47,6 +47,14 @@ public class MainActivity extends AppCompatActivity {
         // Set the content view for the main activity.
         setContentView(R.layout.activity_main);
 
+        // Set adapter
+        ViewPager2 viewPager2_appContent = findViewById(R.id.viewPager2_appContent);
+
+        ViewPagerAdapter adapter = new ViewPagerAdapter(this);
+        viewPager2_appContent.setAdapter(adapter);
+        viewPager2_appContent.setOffscreenPageLimit(4);
+        viewPager2_appContent.setUserInputEnabled(true);
+
         // Network monitoring and offline banner
         networkMonitor = new NetworkMonitor(this);
         View layoutOfflineBanner = findViewById(R.id.layout_offlineBanner);
@@ -56,7 +64,9 @@ public class MainActivity extends AppCompatActivity {
                 layoutOfflineBanner.setVisibility(Boolean.TRUE.equals(isOnline) ? View.GONE : View.VISIBLE);
             }
             if (Boolean.TRUE.equals(isOnline)) {
-                mainViewModel.fetchData();
+                // Mark all tabs as needing refresh, then fetch only the currently visible one
+                mainViewModel.markAllAsNeedsRefresh();
+                triggerCurrentTabFetch(viewPager2_appContent);
             }
         });
 
@@ -75,14 +85,6 @@ public class MainActivity extends AppCompatActivity {
         mainViewModel.getIsLoadingTimetable().observe(this, loadingObserver);
         mainViewModel.getIsLoadingArticles().observe(this, loadingObserver);
         mainViewModel.getIsLoadingCalendar().observe(this, loadingObserver);
-
-        // Set adapter
-        ViewPager2 viewPager2_appContent = findViewById(R.id.viewPager2_appContent);
-
-        ViewPagerAdapter adapter = new ViewPagerAdapter(this);
-        viewPager2_appContent.setAdapter(adapter);
-        viewPager2_appContent.setOffscreenPageLimit(4);
-        viewPager2_appContent.setUserInputEnabled(true);
 
         // Connect the TabLayout (navigation) with the ViewPager2 (app content)
         TabLayout tabLayout_navigate = findViewById(R.id.tabLayout_navigate);
@@ -111,27 +113,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }).attach();
 
-        mainViewModel.setReplacementsNeedsRefresh(true);
-
         tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                int position = tab.getPosition();
-                if (position == ViewPagerAdapter.TIMETABLE_TAB_ID) {
-                    if (mainViewModel.isTimetableNeedsRefresh()) {
-                        mainViewModel.setTimetableNeedsRefresh(false);
-                        if (isOnline()) {
-                            mainViewModel.fetchTimetable();
-                        }
-                    }
-                } else if (position == ViewPagerAdapter.REPLACEMENTS_TAB_ID) {
-                    if (mainViewModel.isReplacementsNeedsRefresh()) {
-                        mainViewModel.setReplacementsNeedsRefresh(false);
-                        if (isOnline()) {
-                            mainViewModel.fetchReplacements();
-                        }
-                    }
-                }
+                triggerTabFetch(tab.getPosition());
             }
 
             @Override
@@ -149,6 +134,42 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
         });
+
+        // Trigger initial data load for the default visible tab (both online and offline)
+        triggerCurrentTabFetch(viewPager2_appContent);
+    }
+
+    private void triggerCurrentTabFetch(ViewPager2 viewPager) {
+        triggerTabFetch(viewPager.getCurrentItem());
+    }
+
+    private void triggerTabFetch(int position) {
+        switch (position) {
+            case ViewPagerAdapter.TIMETABLE_TAB_ID -> {
+                if (mainViewModel.isTimetableNeedsRefresh()) {
+                    mainViewModel.setTimetableNeedsRefresh(false);
+                    mainViewModel.fetchTimetable();
+                }
+            }
+            case ViewPagerAdapter.REPLACEMENTS_TAB_ID -> {
+                if (mainViewModel.isReplacementsNeedsRefresh()) {
+                    mainViewModel.setReplacementsNeedsRefresh(false);
+                    mainViewModel.fetchReplacements();
+                }
+            }
+            case ViewPagerAdapter.ARTICLES_TAB_ID -> {
+                if (mainViewModel.isArticlesNeedsRefresh()) {
+                    mainViewModel.setArticlesNeedsRefresh(false);
+                    mainViewModel.fetchArticles();
+                }
+            }
+            case ViewPagerAdapter.CALENDAR_TAB_ID -> {
+                if (mainViewModel.isCalendarNeedsRefresh()) {
+                    mainViewModel.setCalendarNeedsRefresh(false);
+                    mainViewModel.fetchCalendar();
+                }
+            }
+        }
     }
 
     @Override

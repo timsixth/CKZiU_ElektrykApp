@@ -210,8 +210,10 @@ public class MainViewModel extends ViewModel {
     }
 
     private boolean settingsChanged = false;
-    private boolean timetableNeedsRefresh = false;
-    private boolean replacementsNeedsRefresh = false;
+    private boolean timetableNeedsRefresh = true;
+    private boolean replacementsNeedsRefresh = true;
+    private boolean articlesNeedsRefresh = true;
+    private boolean calendarNeedsRefresh = true;
 
     public boolean isSettingsChanged() {
         return settingsChanged;
@@ -235,5 +237,28 @@ public class MainViewModel extends ViewModel {
 
     public void setReplacementsNeedsRefresh(boolean replacementsNeedsRefresh) {
         this.replacementsNeedsRefresh = replacementsNeedsRefresh;
+    }
+
+    public boolean isArticlesNeedsRefresh() {
+        return articlesNeedsRefresh;
+    }
+
+    public void setArticlesNeedsRefresh(boolean articlesNeedsRefresh) {
+        this.articlesNeedsRefresh = articlesNeedsRefresh;
+    }
+
+    public boolean isCalendarNeedsRefresh() {
+        return calendarNeedsRefresh;
+    }
+
+    public void setCalendarNeedsRefresh(boolean calendarNeedsRefresh) {
+        this.calendarNeedsRefresh = calendarNeedsRefresh;
+    }
+
+    public void markAllAsNeedsRefresh() {
+        timetableNeedsRefresh = true;
+        replacementsNeedsRefresh = true;
+        articlesNeedsRefresh = true;
+        calendarNeedsRefresh = true;
     }
 }

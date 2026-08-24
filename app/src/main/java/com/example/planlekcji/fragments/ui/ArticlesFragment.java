@@ -53,7 +53,6 @@ public class ArticlesFragment extends Fragment {
         articlesContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), articlesContainer, EmptyStateType.ARTICLES));
 
         observeArticlesData();
-        mainViewModel.fetchArticles();
 
         return view;
     }

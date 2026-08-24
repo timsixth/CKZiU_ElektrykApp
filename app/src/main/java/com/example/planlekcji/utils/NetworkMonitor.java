@@ -49,12 +49,20 @@ public class NetworkMonitor {
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
-                mainHandler.post(() -> isOnlineLiveData.setValue(true));
+                mainHandler.post(() -> {
+                    if (!Boolean.TRUE.equals(isOnlineLiveData.getValue())) {
+                        isOnlineLiveData.setValue(true);
+                    }
+                });
             }
 
             @Override
             public void onLost(@NonNull Network network) {
-                mainHandler.post(() -> isOnlineLiveData.setValue(false));
+                mainHandler.post(() -> {
+                    if (!Boolean.FALSE.equals(isOnlineLiveData.getValue())) {
+                        isOnlineLiveData.setValue(false);
+                    }
+                });
             }
         };
 

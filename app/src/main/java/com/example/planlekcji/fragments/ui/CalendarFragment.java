@@ -40,7 +40,6 @@ public class CalendarFragment extends Fragment {
         calendarContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), calendarContainer, EmptyStateType.CALENDAR));
 
         observeCalendarData();
-        mainViewModel.fetchCalendar();
 
         return view;
     }

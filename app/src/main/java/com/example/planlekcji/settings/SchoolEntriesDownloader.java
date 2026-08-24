@@ -48,6 +48,24 @@ public class SchoolEntriesDownloader implements Runnable {
         Context context = MainActivity.getContext();
         Type entryListType = new TypeToken<List<SchoolEntry>>(){}.getType();
 
+        // Cache-first: load from local DB immediately
+        if (context != null) {
+            List<SchoolEntry> cachedClasses = DatabaseCacheManager.getInstance(context).getObject(CACHE_CLASSES, entryListType);
+            List<SchoolEntry> cachedTeachers = DatabaseCacheManager.getInstance(context).getObject(CACHE_TEACHERS, entryListType);
+            List<SchoolEntry> cachedClassrooms = DatabaseCacheManager.getInstance(context).getObject(CACHE_CLASSROOMS, entryListType);
+
+            if (cachedClasses != null) classesSchoolEntries = cachedClasses;
+            if (cachedTeachers != null) teachersSchoolEntries = cachedTeachers;
+            if (cachedClassrooms != null) classroomsSchoolEntries = cachedClassrooms;
+        }
+
+        // If all three are already cached, skip the network call entirely
+        if (!classesSchoolEntries.isEmpty() && !teachersSchoolEntries.isEmpty() && !classroomsSchoolEntries.isEmpty()) {
+            sortEntries();
+            return;
+        }
+
+        // Cache was empty (first run) – fetch from network
         try {
             TimetableService timetableService = client.getTimetableService(SchoolEntryType.CLASSES);
             classesSchoolEntries = timetableService.getList();
@@ -58,44 +76,24 @@ public class SchoolEntriesDownloader implements Runnable {
             timetableService = client.getTimetableService(SchoolEntryType.CLASSROOMS);
             classroomsSchoolEntries = timetableService.getList();
 
-            if (classesSchoolEntries != null && !classesSchoolEntries.isEmpty() && context != null) {
-                DatabaseCacheManager.getInstance(context).saveObject(CACHE_CLASSES, classesSchoolEntries);
-            }
-            if (teachersSchoolEntries != null && !teachersSchoolEntries.isEmpty() && context != null) {
-                DatabaseCacheManager.getInstance(context).saveObject(CACHE_TEACHERS, teachersSchoolEntries);
-            }
-            if (classroomsSchoolEntries != null && !classroomsSchoolEntries.isEmpty() && context != null) {
-                DatabaseCacheManager.getInstance(context).saveObject(CACHE_CLASSROOMS, classroomsSchoolEntries);
+            if (context != null) {
+                if (classesSchoolEntries != null && !classesSchoolEntries.isEmpty()) {
+                    DatabaseCacheManager.getInstance(context).saveObject(CACHE_CLASSES, classesSchoolEntries);
+                }
+                if (teachersSchoolEntries != null && !teachersSchoolEntries.isEmpty()) {
+                    DatabaseCacheManager.getInstance(context).saveObject(CACHE_TEACHERS, teachersSchoolEntries);
+                }
+                if (classroomsSchoolEntries != null && !classroomsSchoolEntries.isEmpty()) {
+                    DatabaseCacheManager.getInstance(context).saveObject(CACHE_CLASSROOMS, classroomsSchoolEntries);
+                }
             }
         } catch (Exception e) {
-            Log.e("SchoolEntriesDownloader", "Failed to download school entries from network, loading cache", e);
+            Log.e("SchoolEntriesDownloader", "Failed to download school entries from network", e);
         }
 
-        // Fallback to cache if empty
-        if (context != null) {
-            if (classesSchoolEntries == null || classesSchoolEntries.isEmpty()) {
-                List<SchoolEntry> cached = DatabaseCacheManager.getInstance(context).getObject(CACHE_CLASSES, entryListType);
-                if (cached != null) classesSchoolEntries = cached;
-            }
-            if (teachersSchoolEntries == null || teachersSchoolEntries.isEmpty()) {
-                List<SchoolEntry> cached = DatabaseCacheManager.getInstance(context).getObject(CACHE_TEACHERS, entryListType);
-                if (cached != null) teachersSchoolEntries = cached;
-            }
-            if (classroomsSchoolEntries == null || classroomsSchoolEntries.isEmpty()) {
-                List<SchoolEntry> cached = DatabaseCacheManager.getInstance(context).getObject(CACHE_CLASSROOMS, entryListType);
-                if (cached != null) classroomsSchoolEntries = cached;
-            }
-        }
-
-        if (classesSchoolEntries == null) {
-            classesSchoolEntries = new ArrayList<>();
-        }
-        if (teachersSchoolEntries == null) {
-            teachersSchoolEntries = new ArrayList<>();
-        }
-        if (classroomsSchoolEntries == null) {
-            classroomsSchoolEntries = new ArrayList<>();
-        }
+        if (classesSchoolEntries == null) classesSchoolEntries = new ArrayList<>();
+        if (teachersSchoolEntries == null) teachersSchoolEntries = new ArrayList<>();
+        if (classroomsSchoolEntries == null) classroomsSchoolEntries = new ArrayList<>();
 
         sortEntries();
     }
