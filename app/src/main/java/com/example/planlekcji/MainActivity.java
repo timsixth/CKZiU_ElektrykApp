@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Set adapter
         ViewPager2 viewPager2_appContent = findViewById(R.id.viewPager2_appContent);
+        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefresh_main);
 
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
         viewPager2_appContent.setAdapter(adapter);
@@ -68,13 +69,14 @@ public class MainActivity extends AppCompatActivity {
             if (layoutOfflineBanner != null) {
                 layoutOfflineBanner.setVisibility(Boolean.TRUE.equals(isOnline) ? View.GONE : View.VISIBLE);
             }
+            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent);
         });
 
         // Swipe to Refresh
-        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefresh_main);
         if (swipeRefresh != null) {
             swipeRefresh.setProgressBackgroundColorSchemeColor(Color.parseColor("#2C2C2C"));
             swipeRefresh.setColorSchemeColors(Color.parseColor("#FFC107"));
+            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent);
             swipeRefresh.setOnRefreshListener(() -> {
                 int currentTab = viewPager2_appContent.getCurrentItem();
                 switch (currentTab) {
@@ -136,9 +138,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if (swipeRefresh != null) {
-                    swipeRefresh.setEnabled(tab.getPosition() != ViewPagerAdapter.SETTINGS_TAB_ID);
-                }
+                updateSwipeRefreshState(swipeRefresh, viewPager2_appContent);
                 triggerTabFetch(tab.getPosition());
             }
 
@@ -166,6 +166,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Trigger initial data load for the default visible tab (both online and offline)
         triggerCurrentTabFetch(viewPager2_appContent);
+    }
+
+    private void updateSwipeRefreshState(SwipeRefreshLayout swipeRefresh, ViewPager2 viewPager) {
+        if (swipeRefresh != null) {
+            swipeRefresh.setEnabled(isOnline() && viewPager.getCurrentItem() != ViewPagerAdapter.SETTINGS_TAB_ID);
+        }
     }
 
     private void handleManualRefresh(SwipeRefreshLayout swipeRefresh, RefreshDataType type, Runnable refreshAction) {
