@@ -15,6 +15,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager2.widget.ViewPager2;
@@ -51,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the content view for the main activity.
         setContentView(R.layout.activity_main);
+
+        // Apply window insets to avoid drawing behind system bars (status bar, navigation bar)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.constraintLayout), (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return windowInsets;
+        });
 
         // Set adapter
         ViewPager2 viewPager2_appContent = findViewById(R.id.viewPager2_appContent);
