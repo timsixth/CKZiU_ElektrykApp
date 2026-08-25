@@ -20,7 +20,12 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import okhttp3.OkHttpClient;
+
 public class CKZiUElektrykClient {
+
+    private static CKZiUElektrykClient instance;
+    private static final OkHttpClient SHARED_HTTP_CLIENT = new OkHttpClient();
 
     protected Config config;
     private final ReplacementService replacementService;
@@ -36,8 +41,19 @@ public class CKZiUElektrykClient {
         this.articleService = ArticleServiceFactory.create(config);
     }
 
-    public CKZiUElektrykClient() {
+    private CKZiUElektrykClient() {
         this(Config.getOrCreateConfig());
+    }
+
+    public static synchronized CKZiUElektrykClient getInstance() {
+        if (instance == null) {
+            instance = new CKZiUElektrykClient();
+        }
+        return instance;
+    }
+
+    public static OkHttpClient getSharedHttpClient() {
+        return SHARED_HTTP_CLIENT;
     }
 
     public ReplacementService getReplacementService() {

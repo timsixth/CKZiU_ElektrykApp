@@ -43,7 +43,7 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<Boolean> isLoadingCalendar = new MutableLiveData<>(false);
 
     public MainViewModel() {
-        client = new CKZiUElektrykClient();
+        client = CKZiUElektrykClient.getInstance();
         client.setFailedApiConnectionCallback(e -> {
             Context context = MainActivity.getContext();
             if (context != null) {

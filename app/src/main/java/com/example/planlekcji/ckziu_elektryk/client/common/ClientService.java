@@ -2,6 +2,7 @@ package com.example.planlekcji.ckziu_elektryk.client.common;
 
 import androidx.annotation.NonNull;
 
+import com.example.planlekcji.ckziu_elektryk.client.CKZiUElektrykClient;
 import com.example.planlekcji.ckziu_elektryk.client.Config;
 import com.example.planlekcji.ckziu_elektryk.client.pagination.Page;
 import com.example.planlekcji.ckziu_elektryk.client.response.ErrorResponse;
@@ -32,7 +33,7 @@ public abstract class ClientService {
 
     protected ClientService(Config config) {
         this.config = config;
-        this.httpClient = new OkHttpClient();
+        this.httpClient = CKZiUElektrykClient.getSharedHttpClient();
         this.gson = new Gson();
     }
 
