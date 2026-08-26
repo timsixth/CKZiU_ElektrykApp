@@ -72,7 +72,6 @@ public class ReplacementDataDownloader implements Runnable {
             ReplacementService replacementService = client.getReplacementService();
             Date[] next5Dates = getNext5Dates();
             List<List<Replacement>> latestReplacements = new ArrayList<>();
-            boolean hasResponse = false;
 
             ReplacementType replacementType = (timetableType == SchoolEntryType.CLASSES)
                     ? ReplacementType.CLASSES
@@ -82,31 +81,29 @@ public class ReplacementDataDownloader implements Runnable {
                 if (Thread.currentThread().isInterrupted()) return;
 
                 List<Replacement> rawReplacements = replacementService.getReplacements(replacementType, date);
-                if (rawReplacements != null) {
-                    hasResponse = true;
-                    if (timetableType == SchoolEntryType.CLASSES) {
-                        List<Replacement> filtered = rawReplacements.stream()
-                                .filter(Objects::nonNull)
-                                .filter(r -> Objects.equals(r.name(), token))
-                                .collect(Collectors.toList());
-                        latestReplacements.add(filtered);
-                    } else {
-                        latestReplacements.add(rawReplacements);
-                    }
+                if (rawReplacements == null) {
+                    listener.onDownloadFailed();
+                    return;
+                }
+
+                if (timetableType == SchoolEntryType.CLASSES) {
+                    List<Replacement> filtered = rawReplacements.stream()
+                            .filter(Objects::nonNull)
+                            .filter(r -> Objects.equals(r.name(), token))
+                            .collect(Collectors.toList());
+                    latestReplacements.add(filtered);
+                } else {
+                    latestReplacements.add(rawReplacements);
                 }
             }
 
-            if (hasResponse) {
-                if (context != null && !token.isEmpty()) {
-                    DatabaseCacheManager.getInstance(context).saveObject(cacheKey, latestReplacements);
-                    if (cooldown != null) {
-                        cooldown.recordRefresh(RefreshDataType.REPLACEMENTS);
-                    }
+            if (context != null && !token.isEmpty()) {
+                DatabaseCacheManager.getInstance(context).saveObject(cacheKey, latestReplacements);
+                if (cooldown != null) {
+                    cooldown.recordRefresh(RefreshDataType.REPLACEMENTS);
                 }
-                listener.onDownloadComplete(latestReplacements);
-            } else {
-                listener.onDownloadFailed();
             }
+            listener.onDownloadComplete(latestReplacements);
         } catch (Exception e) {
             listener.onDownloadFailed();
         }
