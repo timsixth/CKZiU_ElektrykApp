@@ -10,7 +10,6 @@ import android.net.NetworkCapabilities;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +26,7 @@ import com.example.planlekcji.fragments.model.ViewPagerAdapter;
 import com.example.planlekcji.utils.NetworkMonitor;
 import com.example.planlekcji.utils.RefreshCooldownManager;
 import com.example.planlekcji.utils.RefreshDataType;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -99,17 +99,26 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Progress bar
-        ProgressBar progressBar = findViewById(R.id.progressBar);
+        // Progress indicator
+        LinearProgressIndicator progressBar = findViewById(R.id.linearProgressBar);
 
         androidx.lifecycle.Observer<Boolean> loadingObserver = unused -> {
             boolean isLoading = Boolean.TRUE.equals(mainViewModel.getIsLoadingReplacements().getValue())
                     || Boolean.TRUE.equals(mainViewModel.getIsLoadingTimetable().getValue())
                     || Boolean.TRUE.equals(mainViewModel.getIsLoadingArticles().getValue())
                     || Boolean.TRUE.equals(mainViewModel.getIsLoadingCalendar().getValue());
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-            if (!isLoading && swipeRefresh != null) {
-                swipeRefresh.setRefreshing(false);
+
+            boolean isSwipeRefreshing = swipeRefresh != null && swipeRefresh.isRefreshing();
+
+            if (isLoading) {
+                if (!isSwipeRefreshing) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
+            } else {
+                progressBar.setVisibility(View.GONE);
+                if (swipeRefresh != null) {
+                    swipeRefresh.setRefreshing(false);
+                }
             }
         };
 
