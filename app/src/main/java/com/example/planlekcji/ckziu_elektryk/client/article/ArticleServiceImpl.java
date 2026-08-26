@@ -74,22 +74,20 @@ public class ArticleServiceImpl extends ClientService implements ArticleService 
                 .success(successResponse -> {
                     JsonObject jsonObject = successResponse.getJsonElement().getAsJsonObject();
 
-                    Article article = new Article(
-                            jsonObject.get("id").getAsInt(),
-                            Article.parsedDate(jsonObject.get("creation_date").getAsString()),
-                            jsonObject.get("title").getAsString(),
-                            jsonObject.get("content").getAsString(),
-                            parseURL(jsonObject.get("header_image_url").getAsString()));
-
                     JsonArray jsonArray = jsonObject.get("photos_urls").getAsJsonArray();
 
                     List<URL> photosUrls = jsonArray.asList().stream()
                             .map(jsonElement -> parseURL(jsonElement.getAsJsonObject().get("url").getAsString()))
                             .collect(Collectors.toList());
 
-                    article.setPhotosURLs(photosUrls);
-
-                    return article;
+                    return new Article(
+                            jsonObject.get("id").getAsInt(),
+                            Article.parsedDate(jsonObject.get("creation_date").getAsString()),
+                            jsonObject.get("title").getAsString(),
+                            jsonObject.get("content").getAsString(),
+                            parseURL(jsonObject.get("header_image_url").getAsString()),
+                            photosUrls
+                    );
                 }));
     }
 }

@@ -79,25 +79,25 @@ public class ArticlesFragment extends Fragment {
             TextView textViewDate = cardView.findViewById(R.id.textView_articleDate);
             TextView textViewSnippet = cardView.findViewById(R.id.textView_articleSnippet);
 
-            textViewTitle.setText(article.getTitle());
+            textViewTitle.setText(article.title());
 
-            if (article.getCreationDate() != null) {
-                textViewDate.setText(dateFormat.format(article.getCreationDate()));
+            if (article.creationDate() != null) {
+                textViewDate.setText(dateFormat.format(article.creationDate()));
             } else {
                 textViewDate.setVisibility(View.GONE);
             }
 
-            if (article.getContent() != null) {
-                String plainText = Html.fromHtml(article.getContent(), Html.FROM_HTML_MODE_LEGACY).toString().trim();
+            if (article.content() != null) {
+                String plainText = Html.fromHtml(article.content(), Html.FROM_HTML_MODE_LEGACY).toString().trim();
                 textViewSnippet.setText(plainText);
             } else {
                 textViewSnippet.setVisibility(View.GONE);
             }
 
-            if (article.getHeaderImageUrl() != null) {
+            if (article.headerImageUrl() != null) {
                 imageViewHeader.setVisibility(View.VISIBLE);
                 Glide.with(this)
-                        .load(article.getHeaderImageUrl().toString())
+                        .load(article.headerImageUrl().toString())
                         .placeholder(R.drawable.image_placeholder)
                         .into(imageViewHeader);
             }
@@ -128,22 +128,22 @@ public class ArticlesFragment extends Fragment {
             layoutOfflineGallery.setVisibility(View.VISIBLE);
         }
 
-        textViewTitle.setText(article.getTitle());
+        textViewTitle.setText(article.title());
 
-        if (article.getCreationDate() != null) {
-            textViewDate.setText(dateFormat.format(article.getCreationDate()));
+        if (article.creationDate() != null) {
+            textViewDate.setText(dateFormat.format(article.creationDate()));
         } else {
             textViewDate.setVisibility(View.GONE);
         }
 
-        if (article.getContent() != null) {
-            textViewContent.setText(Html.fromHtml(article.getContent(), Html.FROM_HTML_MODE_LEGACY));
+        if (article.content() != null) {
+            textViewContent.setText(Html.fromHtml(article.content(), Html.FROM_HTML_MODE_LEGACY));
         }
 
         List<String> allPhotoUrls = new ArrayList<>();
 
-        if (article.getHeaderImageUrl() != null) {
-            String headerUrlStr = article.getHeaderImageUrl().toString();
+        if (article.headerImageUrl() != null) {
+            String headerUrlStr = article.headerImageUrl().toString();
             allPhotoUrls.add(headerUrlStr);
 
             imageViewHeader.setVisibility(View.VISIBLE);
@@ -158,11 +158,11 @@ public class ArticlesFragment extends Fragment {
             try {
                 Optional<Article> fullArticleOpt = mainViewModel.getClient()
                         .getArticleService()
-                        .getArticle(article.getId(), PhotoSize.SIZE_FULL);
+                        .getArticle(article.id(), PhotoSize.SIZE_FULL);
 
                 if (fullArticleOpt.isPresent() && isAdded()) {
                     Article fullArticle = fullArticleOpt.get();
-                    List<URL> photos = fullArticle.getPhotosURLs();
+                    List<URL> photos = fullArticle.photosURLs();
 
                     List<String> galleryUrls = (photos != null) ? photos.stream()
                             .map(URL::toString)
@@ -178,8 +178,8 @@ public class ArticlesFragment extends Fragment {
                     requireActivity().runOnUiThread(() -> {
                         if (!isAdded()) return;
 
-                        if (fullArticle.getContent() != null) {
-                            textViewContent.setText(Html.fromHtml(fullArticle.getContent(), Html.FROM_HTML_MODE_LEGACY));
+                        if (fullArticle.content() != null) {
+                            textViewContent.setText(Html.fromHtml(fullArticle.content(), Html.FROM_HTML_MODE_LEGACY));
                         }
 
                         if (layoutOfflineGallery != null) {
@@ -188,7 +188,7 @@ public class ArticlesFragment extends Fragment {
 
                         if (!combinedUrls.isEmpty()) {
                             populateGalleryThumbnails(galleryScrollView, galleryLayout, combinedUrls);
-                            if (article.getHeaderImageUrl() != null) {
+                            if (article.headerImageUrl() != null) {
                                 imageViewHeader.setOnClickListener(v -> showFullGalleryViewer(combinedUrls, 0));
                             }
                         }
