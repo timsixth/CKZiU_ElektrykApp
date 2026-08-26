@@ -25,6 +25,7 @@ import com.example.planlekcji.utils.RefreshDataType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -117,7 +118,9 @@ public class MainViewModel extends ViewModel {
 
             @Override
             public void onDownloadComplete(List<List<Replacement>> replacementList) {
-                replacements.postValue(replacementList);
+                if (!Objects.equals(replacements.getValue(), replacementList)) {
+                    replacements.postValue(replacementList);
+                }
                 isLoadingReplacements.postValue(false);
             }
 
@@ -142,7 +145,9 @@ public class MainViewModel extends ViewModel {
 
             @Override
             public void onDownloadComplete(Map<DayOfWeek, List<Lesson>> timetableMap) {
-                timetable.postValue(timetableMap);
+                if (timetable.getValue() != timetableMap && !Objects.equals(timetable.getValue(), timetableMap)) {
+                    timetable.postValue(timetableMap);
+                }
                 isLoadingTimetable.postValue(false);
             }
 
@@ -167,7 +172,9 @@ public class MainViewModel extends ViewModel {
 
             @Override
             public void onDownloadComplete(List<Article> articleList) {
-                articles.postValue(articleList);
+                if (!Objects.equals(articles.getValue(), articleList)) {
+                    articles.postValue(articleList);
+                }
                 isLoadingArticles.postValue(false);
             }
 
@@ -192,7 +199,9 @@ public class MainViewModel extends ViewModel {
 
             @Override
             public void onDownloadComplete(Calendar calendarData) {
-                calendar.postValue(calendarData);
+                if (!Objects.equals(calendar.getValue(), calendarData)) {
+                    calendar.postValue(calendarData);
+                }
                 isLoadingCalendar.postValue(false);
             }
 

@@ -45,9 +45,10 @@ public class TimetableDataDownloader implements Runnable {
         Context context = MainActivity.getContext();
         String cacheKey = "timetable_" + schoolEntryType.name() + "_" + token;
         Map<DayOfWeek, List<Lesson>> cachedMap = null;
+        String cachedJson = null;
         if (context != null && !token.isEmpty()) {
             try {
-                String cachedJson = DatabaseCacheManager.getInstance(context).getRawJson(cacheKey);
+                cachedJson = DatabaseCacheManager.getInstance(context).getRawJson(cacheKey);
                 if (cachedJson != null) {
                     JsonObject jsonObject = JsonParser.parseString(cachedJson).getAsJsonObject();
                     cachedMap = AbstractTimetableService.parseTimetable(jsonObject);
@@ -78,8 +79,17 @@ public class TimetableDataDownloader implements Runnable {
             JsonObject jsonObject = timetableService.getTimetableJsonObject(token);
 
             if (jsonObject != null && !jsonObject.isEmpty()) {
+                String newJson = jsonObject.toString();
+                if (newJson.equals(cachedJson) && cachedMap != null && !cachedMap.isEmpty()) {
+                    if (cooldown != null) {
+                        cooldown.recordRefresh(RefreshDataType.TIMETABLE);
+                    }
+                    listener.onDownloadComplete(cachedMap);
+                    return;
+                }
+
                 if (context != null) {
-                    DatabaseCacheManager.getInstance(context).saveRawJson(cacheKey, jsonObject.toString());
+                    DatabaseCacheManager.getInstance(context).saveRawJson(cacheKey, newJson);
                     if (cooldown != null) {
                         cooldown.recordRefresh(RefreshDataType.TIMETABLE);
                     }
