@@ -118,6 +118,14 @@ public class MainActivity extends AppCompatActivity {
         mainViewModel.getIsLoadingArticles().observe(this, loadingObserver);
         mainViewModel.getIsLoadingCalendar().observe(this, loadingObserver);
 
+        // Error message Toast observer
+        mainViewModel.getToastErrorMessage().observe(this, resId -> {
+            if (resId != null) {
+                Toast.makeText(this, resId, Toast.LENGTH_SHORT).show();
+                mainViewModel.clearToastErrorMessage();
+            }
+        });
+
         // Connect the TabLayout (navigation) with the ViewPager2 (app content)
         TabLayout tabLayout_navigate = findViewById(R.id.tabLayout_navigate);
         new TabLayoutMediator(tabLayout_navigate, viewPager2_appContent, (tab, position) -> {

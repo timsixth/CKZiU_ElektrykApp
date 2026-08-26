@@ -22,7 +22,6 @@ import com.example.planlekcji.timetable.TimetableDataDownloader;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 import com.example.planlekcji.utils.RefreshCooldownManager;
 import com.example.planlekcji.utils.RefreshDataType;
-import com.example.planlekcji.utils.ToastUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,9 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<List<Article>> articles = new MutableLiveData<>();
     private final MutableLiveData<Calendar> calendar = new MutableLiveData<>();
 
+    // Error notification LiveData (string resource ID)
+    private final MutableLiveData<Integer> toastErrorMessage = new MutableLiveData<>();
+
     // ProgressBar state
     private final MutableLiveData<Boolean> isLoadingReplacements = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoadingTimetable = new MutableLiveData<>(false);
@@ -45,20 +47,12 @@ public class MainViewModel extends ViewModel {
     public MainViewModel() {
         client = CKZiUElektrykClient.getInstance();
         client.setFailedApiConnectionCallback(e -> {
-            Context context = MainActivity.getContext();
-            if (context != null) {
-                String errorMessage = context.getString(R.string.toastErrorMessage_failedApiConnection);
-                ToastUtils.showToast(context, errorMessage, false);
-            }
+            toastErrorMessage.postValue(R.string.toastErrorMessage_failedApiConnection);
         });
 
         client.setFailedRouteRespondCallback(errorResponse -> {
             System.err.println("Error occurred: " + errorResponse.getMessage());
-            Context context = MainActivity.getContext();
-            if (context != null) {
-                String errMess = context.getString(R.string.toast_errorMessage);
-                ToastUtils.showToast(context, errMess, false);
-            }
+            toastErrorMessage.postValue(R.string.toast_errorMessage);
         });
     }
 
@@ -220,6 +214,14 @@ public class MainViewModel extends ViewModel {
 
     public LiveData<Boolean> getIsLoadingCalendar() {
         return isLoadingCalendar;
+    }
+
+    public LiveData<Integer> getToastErrorMessage() {
+        return toastErrorMessage;
+    }
+
+    public void clearToastErrorMessage() {
+        toastErrorMessage.setValue(null);
     }
 
     public CKZiUElektrykClient getClient() {
