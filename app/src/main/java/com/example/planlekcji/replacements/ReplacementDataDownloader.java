@@ -79,6 +79,8 @@ public class ReplacementDataDownloader implements Runnable {
                     : ReplacementType.TEACHERS;
 
             for (Date date : next5Dates) {
+                if (Thread.currentThread().isInterrupted()) return;
+
                 List<Replacement> rawReplacements = replacementService.getReplacements(replacementType, date);
                 if (rawReplacements != null) {
                     hasResponse = true;

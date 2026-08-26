@@ -25,9 +25,18 @@ import com.example.planlekcji.utils.RefreshDataType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MainViewModel extends ViewModel {
     private final CKZiUElektrykClient client;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+
+    private Future<?> replacementsTask;
+    private Future<?> timetableTask;
+    private Future<?> articlesTask;
+    private Future<?> calendarTask;
 
     // Downloaded data
     private final MutableLiveData<List<List<Replacement>>> replacements = new MutableLiveData<>();
@@ -96,6 +105,9 @@ public class MainViewModel extends ViewModel {
     }
 
     private void startReplacementDownload() {
+        if (replacementsTask != null && !replacementsTask.isDone()) {
+            replacementsTask.cancel(true);
+        }
         isLoadingReplacements.postValue(true);
         ReplacementDataDownloader downloader = new ReplacementDataDownloader(client, new ReplacementsDownloadCompleteListener() {
             @Override
@@ -114,10 +126,13 @@ public class MainViewModel extends ViewModel {
                 isLoadingReplacements.postValue(false);
             }
         });
-        new Thread(downloader).start();
+        replacementsTask = executorService.submit(downloader);
     }
 
     private void startTimetableDownload() {
+        if (timetableTask != null && !timetableTask.isDone()) {
+            timetableTask.cancel(true);
+        }
         isLoadingTimetable.postValue(true);
         TimetableDataDownloader downloader = new TimetableDataDownloader(client, new TimetableDownloadCompleteListener() {
             @Override
@@ -136,10 +151,13 @@ public class MainViewModel extends ViewModel {
                 isLoadingTimetable.postValue(false);
             }
         });
-        new Thread(downloader).start();
+        timetableTask = executorService.submit(downloader);
     }
 
     private void startArticlesDownload() {
+        if (articlesTask != null && !articlesTask.isDone()) {
+            articlesTask.cancel(true);
+        }
         isLoadingArticles.postValue(true);
         ArticleDataDownloader downloader = new ArticleDataDownloader(client, new ArticlesDownloadCompleteListener() {
             @Override
@@ -158,10 +176,13 @@ public class MainViewModel extends ViewModel {
                 isLoadingArticles.postValue(false);
             }
         });
-        new Thread(downloader).start();
+        articlesTask = executorService.submit(downloader);
     }
 
     private void startCalendarDownload() {
+        if (calendarTask != null && !calendarTask.isDone()) {
+            calendarTask.cancel(true);
+        }
         isLoadingCalendar.postValue(true);
         CalendarDataDownloader downloader = new CalendarDataDownloader(client, new CalendarDownloadCompleteListener() {
             @Override
@@ -180,7 +201,25 @@ public class MainViewModel extends ViewModel {
                 isLoadingCalendar.postValue(false);
             }
         });
-        new Thread(downloader).start();
+        calendarTask = executorService.submit(downloader);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (replacementsTask != null) {
+            replacementsTask.cancel(true);
+        }
+        if (timetableTask != null) {
+            timetableTask.cancel(true);
+        }
+        if (articlesTask != null) {
+            articlesTask.cancel(true);
+        }
+        if (calendarTask != null) {
+            calendarTask.cancel(true);
+        }
+        executorService.shutdownNow();
     }
 
     // LiveData getters
