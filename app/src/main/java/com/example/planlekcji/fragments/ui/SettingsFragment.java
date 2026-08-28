@@ -1,6 +1,12 @@
 package com.example.planlekcji.fragments.ui;
 
+import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -13,7 +19,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
-
+import android.widget.TextView;
+import android.widget.Toast;
+import com.example.planlekcji.BuildConfig;
 import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
@@ -21,8 +29,6 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntry;
 import com.example.planlekcji.settings.GroupPreferenceManager;
 import com.example.planlekcji.settings.SchoolEntriesDownloader;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,6 +94,9 @@ public class SettingsFragment extends Fragment {
             });
         }
 
+        // Setup About section
+        setupAboutSection();
+
         // Initial visibility
         changeVisibility();
 
@@ -95,6 +104,68 @@ public class SettingsFragment extends Fragment {
         getData();
 
         return view;
+    }
+
+    private static final String GITHUB_REPO_URL = "https://github.com/Bokeher/PlanLekcji";
+    private static final String PRIVACY_POLICY_URL = "https://github.com/Bokeher/PlanLekcji/blob/master/PRIVACY_POLICY.md";
+    private static final String CONTACT_EMAIL = "rychter47@gmail.com";
+
+    private void setupAboutSection() {
+        if (view == null) return;
+
+        TextView textViewVersion = view.findViewById(R.id.textView_aboutVersion);
+        if (textViewVersion != null) {
+            textViewVersion.setText(BuildConfig.VERSION_NAME);
+        }
+
+        View layoutGitHub = view.findViewById(R.id.layout_aboutGitHub);
+        if (layoutGitHub != null) {
+            layoutGitHub.setOnClickListener(v -> openUrl(GITHUB_REPO_URL));
+        }
+
+        View layoutPrivacyPolicy = view.findViewById(R.id.layout_aboutPrivacyPolicy);
+        if (layoutPrivacyPolicy != null) {
+            layoutPrivacyPolicy.setOnClickListener(v -> openUrl(PRIVACY_POLICY_URL));
+        }
+
+        View layoutContact = view.findViewById(R.id.layout_aboutContact);
+        if (layoutContact != null) {
+            layoutContact.setOnClickListener(v -> sendEmail());
+            layoutContact.setOnLongClickListener(v -> {
+                copyContactEmail();
+                return true;
+            });
+        }
+    }
+
+    private void sendEmail() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_SENDTO);
+            intent.setData(Uri.parse("mailto:" + CONTACT_EMAIL));
+            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.settings_about_contact_subject));
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            copyContactEmail();
+            Toast.makeText(requireContext(), R.string.error_cannot_send_email, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void copyContactEmail() {
+        ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            ClipData clip = ClipData.newPlainText("Email", CONTACT_EMAIL);
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(requireContext(), R.string.settings_about_contact_copied, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openUrl(String url) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(requireContext(), R.string.error_cannot_open_link, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateOnlineState(boolean isOnline) {

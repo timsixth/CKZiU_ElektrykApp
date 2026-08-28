@@ -63,4 +63,17 @@
     <string name="settings_groups_reset_success">Group selections have been reset</string>
     <string name="settings_groups_editing_locked">Timetable editing is locked in Settings</string>
     <string name="refresh_up_to_date">Data is up to date</string>
+    <string name="settings_about_title">About application</string>
+    <string name="settings_about_app_name">Timetable CKZiU \"Elektryk\"</string>
+    <string name="settings_about_version">App version</string>
+    <string name="settings_about_github">Source code</string>
+    <string name="settings_about_github_desc">Code is open source and available on GitHub</string>
+    <string name="settings_about_privacy">Privacy policy</string>
+    <string name="settings_about_privacy_desc">No personal data is collected</string>
+    <string name="settings_about_contact">Contact</string>
+    <string name="settings_about_contact_desc">rychter47@gmail.com</string>
+    <string name="settings_about_contact_copied">Email address copied to clipboard</string>
+    <string name="settings_about_contact_subject">[Timetable] Contact</string>
+    <string name="error_cannot_open_link">Cannot open link</string>
+    <string name="error_cannot_send_email">Cannot open email application</string>
 </resources>

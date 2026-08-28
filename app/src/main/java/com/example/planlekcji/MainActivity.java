@@ -79,14 +79,14 @@ public class MainActivity extends AppCompatActivity {
             if (layoutOfflineBanner != null) {
                 layoutOfflineBanner.setVisibility(Boolean.TRUE.equals(isOnline) ? View.GONE : View.VISIBLE);
             }
-            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent);
+            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent.getCurrentItem());
         });
 
         // Swipe to Refresh
         if (swipeRefresh != null) {
             swipeRefresh.setProgressBackgroundColorSchemeColor(Color.parseColor("#2C2C2C"));
             swipeRefresh.setColorSchemeColors(Color.parseColor("#FFC107"));
-            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent);
+            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent.getCurrentItem());
             swipeRefresh.setOnRefreshListener(() -> {
                 int currentTab = viewPager2_appContent.getCurrentItem();
                 switch (currentTab) {
@@ -98,6 +98,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        // Synchronize SwipeRefreshLayout state with ViewPager2 page changes
+        viewPager2_appContent.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                updateSwipeRefreshState(swipeRefresh, position);
+            }
+        });
 
         // Progress indicator
         LinearProgressIndicator progressBar = findViewById(R.id.linearProgressBar);
@@ -165,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                updateSwipeRefreshState(swipeRefresh, viewPager2_appContent);
+                updateSwipeRefreshState(swipeRefresh, tab.getPosition());
                 triggerTabFetch(tab.getPosition());
             }
 
@@ -195,9 +204,10 @@ public class MainActivity extends AppCompatActivity {
         triggerCurrentTabFetch(viewPager2_appContent);
     }
 
-    private void updateSwipeRefreshState(SwipeRefreshLayout swipeRefresh, ViewPager2 viewPager) {
+    private void updateSwipeRefreshState(SwipeRefreshLayout swipeRefresh, int currentPosition) {
         if (swipeRefresh != null) {
-            swipeRefresh.setEnabled(isOnline() && viewPager.getCurrentItem() != ViewPagerAdapter.SETTINGS_TAB_ID);
+            boolean canRefresh = isOnline() && currentPosition != ViewPagerAdapter.SETTINGS_TAB_ID;
+            swipeRefresh.setEnabled(canRefresh);
         }
     }
 

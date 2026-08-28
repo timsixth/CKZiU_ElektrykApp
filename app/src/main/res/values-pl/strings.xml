@@ -55,4 +55,17 @@
     <string name="settings_groups_reset_success">Wybory grup zostały zresetowane</string>
     <string name="settings_groups_editing_locked">Edycja planu jest zablokowana w Ustawieniach</string>
     <string name="refresh_up_to_date">Dane są aktualne</string>
+    <string name="settings_about_title">O aplikacji</string>
+    <string name="settings_about_app_name">Plan Lekcji CKZiU „Elektryk”</string>
+    <string name="settings_about_version">Wersja aplikacji</string>
+    <string name="settings_about_github">Kod źródłowy</string>
+    <string name="settings_about_github_desc">Kod jest otwarty i dostępny na GitHubie</string>
+    <string name="settings_about_privacy">Polityka prywatności</string>
+    <string name="settings_about_privacy_desc">Aplikacja nie gromadzi Twoich danych</string>
+    <string name="settings_about_contact">Kontakt</string>
+    <string name="settings_about_contact_desc">rychter47@gmail.com</string>
+    <string name="settings_about_contact_copied">Skopiowano adres e-mail do schowka</string>
+    <string name="settings_about_contact_subject">[Plan Lekcji] Kontakt</string>
+    <string name="error_cannot_open_link">Nie można otworzyć linku</string>
+    <string name="error_cannot_send_email">Nie można otworzyć aplikacji pocztowej</string>
 </resources>
