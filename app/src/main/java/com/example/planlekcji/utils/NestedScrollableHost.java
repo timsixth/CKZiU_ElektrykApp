@@ -64,8 +64,7 @@ public class NestedScrollableHost extends FrameLayout {
 
         // Use logical page position for ViewPager2 children to avoid
         // false positives from canScrollHorizontally() during settle animations.
-        if (child instanceof ViewPager2) {
-            ViewPager2 childPager = (ViewPager2) child;
+        if (child instanceof ViewPager2 childPager) {
             int itemCount = childPager.getAdapter() != null ? childPager.getAdapter().getItemCount() : 0;
             int currentItem = childPager.getCurrentItem();
 

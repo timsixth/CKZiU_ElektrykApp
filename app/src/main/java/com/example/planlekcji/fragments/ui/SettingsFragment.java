@@ -12,7 +12,6 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,8 +50,7 @@ public class SettingsFragment extends Fragment {
         // Initialize SharedPreferences for storing application settings.
         sharedPref = MainActivity.getContext().getSharedPreferences("sharedPrefs", 0);
 
-        if (getActivity() instanceof MainActivity) {
-            MainActivity activity = (MainActivity) getActivity();
+        if (getActivity() instanceof MainActivity activity) {
             if (activity.getNetworkMonitor() != null) {
                 activity.getNetworkMonitor().getIsOnlineLiveData().observe(getViewLifecycleOwner(), this::updateOnlineState);
             }
@@ -174,7 +172,6 @@ public class SettingsFragment extends Fragment {
         View cardNotice = view.findViewById(R.id.card_settingsOfflineNotice);
         View cardTimetableType = view.findViewById(R.id.card_timetableType);
         View cardSchoolEntries = view.findViewById(R.id.card_schoolEntries);
-        View cardMyGroups = view.findViewById(R.id.card_myGroups);
 
         Spinner spinnerUserType = view.findViewById(R.id.spinnerUserType);
         Spinner spinnerClassTokens = view.findViewById(R.id.spinnerClassTokens);

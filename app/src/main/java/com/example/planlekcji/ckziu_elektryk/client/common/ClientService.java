@@ -55,11 +55,6 @@ public abstract class ClientService {
         try (Response response = this.httpClient.newCall(request).execute()) {
             ResponseBody body = response.body();
 
-            if (body == null) {
-                apiResponseCall.setErrorResponse(new ErrorResponse(response.code(), "Empty response"));
-                return apiResponseCall;
-            }
-
             JsonElement jsonElement;
             try {
                 jsonElement = gson.fromJson(body.charStream(), JsonElement.class);

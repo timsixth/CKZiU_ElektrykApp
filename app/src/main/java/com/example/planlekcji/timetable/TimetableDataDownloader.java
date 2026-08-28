@@ -34,7 +34,7 @@ public class TimetableDataDownloader implements Runnable {
     @Override
     public void run() {
         SchoolEntryType schoolEntryType = MainActivity.getTimetableType();
-        String token = MainActivity.getToken(schoolEntryType).replaceAll(" ", "");
+        String token = MainActivity.getToken(schoolEntryType).replace(" ", "");
 
         if (Config.getOrCreateConfig().isPreviewMode()) {
             listener.onDownloadComplete(PreviewDataStore.getTimetable(schoolEntryType, token));

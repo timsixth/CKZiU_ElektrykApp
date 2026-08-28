@@ -76,7 +76,7 @@ public class DatabaseCacheManager extends SQLiteOpenHelper {
             cursor = db.query(TABLE_CACHE, new String[]{COLUMN_DATA},
                     COLUMN_KEY + " = ?", new String[]{key},
                     null, null, null);
-            if (cursor != null && cursor.moveToFirst()) {
+            if (cursor.moveToFirst()) {
                 return cursor.getString(0);
             }
         } catch (Exception e) {
