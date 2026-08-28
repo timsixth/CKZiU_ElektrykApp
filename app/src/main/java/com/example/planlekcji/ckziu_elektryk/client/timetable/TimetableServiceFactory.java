@@ -2,6 +2,8 @@ package com.example.planlekcji.ckziu_elektryk.client.timetable;
 
 import com.example.planlekcji.ckziu_elektryk.client.Config;
 
+import android.util.Log;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,11 +19,14 @@ public final class TimetableServiceFactory {
     public static TimetableService create(@NotNull SchoolEntryType type, @NotNull Config config) {
         Class<? extends TimetableService> clazz = services.get(type);
 
+        if (clazz == null) return null;
+
         try {
             return clazz.getConstructor(Config.class).newInstance(config);
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException |
                  NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            Log.e("TimetableServiceFactory", "Error instantiating service for type: " + type, e);
+            return null;
         }
     }
 }

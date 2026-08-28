@@ -10,55 +10,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class Article {
+public record Article(
+        int id,
+        @SerializedName("creation_date") Date creationDate,
+        String title,
+        String content,
+        @SerializedName("header_image_url") URL headerImageUrl,
+        @SerializedName("photos_urls") List<URL> photosURLs
+) {
 
     public static final SimpleDateFormat CREATION_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT);
 
-    private final int id;
-    @SerializedName("creation_date")
-    private final Date creationDate;
-    private final String title;
-    private final String content;
-    @SerializedName("header_image_url")
-    private final URL headerImageUrl;
-    @SerializedName("photos_urls")
-    private List<URL> photosURLs;
-
     public Article(int id, Date creationDate, String title, String content, URL headerImageUrl) {
-        this.id = id;
-        this.creationDate = creationDate;
-        this.title = title;
-        this.content = content;
-        this.headerImageUrl = headerImageUrl;
-    }
-
-
-    public int getId() {
-        return id;
-    }
-
-    public Date getCreationDate() {
-        return creationDate;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public URL getHeaderImageUrl() {
-        return headerImageUrl;
-    }
-
-    public List<URL> getPhotosURLs() {
-        return photosURLs;
-    }
-
-    public void setPhotosURLs(List<URL> photosURLs) {
-        this.photosURLs = photosURLs;
+        this(id, creationDate, title, content, headerImageUrl, null);
     }
 
     public static Date parsedDate(String text) {

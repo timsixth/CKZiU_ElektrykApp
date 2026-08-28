@@ -1,20 +1,22 @@
 package com.example.planlekcji.fragments.ui;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
 import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
+import com.example.planlekcji.utils.EmptyStateHelper;
+import com.example.planlekcji.utils.EmptyStateType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
 import com.example.planlekcji.timetable.model.DayOfWeek;
 import com.example.planlekcji.timetable.ui.Adapter;
+import android.widget.LinearLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -24,35 +26,30 @@ import java.util.List;
 import java.util.Map;
 
 public class TimetableFragment extends Fragment {
-    private static final int LAST_DAY_INDEX = 4;
-
     private ViewPager2 viewPager_timetable;
-    private ViewPager2 mainPager;
     private MainViewModel mainViewModel;
 
     private Map<DayOfWeek, List<Lesson>> timetableMap;
     private View view;
+    private LinearLayout emptyStateContainer;
+
+    private boolean isInitialDaySet = false;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_timetable, container, false);
 
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
-        mainPager = requireActivity().findViewById(R.id.viewPager2_appContent);
 
         observeAndHandleTimetableLiveData();
-
-        mainViewModel.fetchTimetable();
 
         viewPager_timetable = view.findViewById(R.id.viewPager_timetable);
         viewPager_timetable.setOffscreenPageLimit(5);
         viewPager_timetable.setUserInputEnabled(true);
-        viewPager_timetable.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                updateMainPagerSwipeState(position);
-            }
-        });
+
+        emptyStateContainer = view.findViewById(R.id.linearLayout_emptyState);
+
+        showEmptyState();
 
         setAdapterToViewPager();
 
@@ -68,17 +65,49 @@ public class TimetableFragment extends Fragment {
         mainViewModel.getTimetableLiveData().observe(getViewLifecycleOwner(), newTimetableMap -> {
             timetableMap = newTimetableMap;
 
+            if (timetableMap == null || timetableMap.isEmpty()) {
+                showEmptyState();
+                isInitialDaySet = false;
+                return;
+            }
+
+            hideEmptyState();
             setAdapterToViewPager();
 
             setHeadersToTabLayout();
-            setCurrentDay();
-            updateMainPagerSwipeState(viewPager_timetable.getCurrentItem());
+
+            if (!isInitialDaySet) {
+                setCurrentDay();
+                isInitialDaySet = true;
+            }
         });
     }
 
+    private void showEmptyState() {
+        viewPager_timetable.setVisibility(View.GONE);
+        view.findViewById(R.id.tabLayout_dayNames).setVisibility(View.GONE);
+        view.findViewById(R.id.nestedScrollableHost).setVisibility(View.GONE);
+        emptyStateContainer.removeAllViews();
+        emptyStateContainer.addView(EmptyStateHelper.create(LayoutInflater.from(requireContext()), emptyStateContainer, EmptyStateType.TIMETABLE));
+        emptyStateContainer.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEmptyState() {
+        emptyStateContainer.setVisibility(View.GONE);
+        emptyStateContainer.removeAllViews();
+        viewPager_timetable.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.tabLayout_dayNames).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.nestedScrollableHost).setVisibility(View.VISIBLE);
+    }
+
+    private TabLayoutMediator tabLayoutMediator;
+
     private void setHeadersToTabLayout() {
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
+        }
         TabLayout tabLayout = view.findViewById(R.id.tabLayout_dayNames);
-        new TabLayoutMediator(tabLayout, viewPager_timetable, (tab, position) -> {
+        tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager_timetable, (tab, position) -> {
             String data = switch (position) {
                 case 0 -> getResources().getString(R.string.mondayShortcut);
                 case 1 -> getResources().getString(R.string.tuesdayShortcut);
@@ -89,7 +118,17 @@ public class TimetableFragment extends Fragment {
             };
 
             tab.setText(data);
-        }).attach();
+        });
+        tabLayoutMediator.attach();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
+            tabLayoutMediator = null;
+        }
     }
 
     /**
@@ -110,11 +149,5 @@ public class TimetableFragment extends Fragment {
         };
 
         viewPager_timetable.setCurrentItem(dayNumb);
-    }
-
-    private void updateMainPagerSwipeState(int dayPosition) {
-        if (mainPager != null) {
-            mainPager.setUserInputEnabled(dayPosition == LAST_DAY_INDEX);
-        }
     }
 }

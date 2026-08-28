@@ -6,54 +6,71 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.planlekcji.articles.ArticleDataDownloader;
+import com.example.planlekcji.calendar.CalendarDataDownloader;
 import com.example.planlekcji.ckziu_elektryk.client.CKZiUElektrykClient;
+import com.example.planlekcji.ckziu_elektryk.client.article.Article;
+import com.example.planlekcji.ckziu_elektryk.client.calendar.Calendar;
 import com.example.planlekcji.ckziu_elektryk.client.replacements.Replacement;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
-import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
+import com.example.planlekcji.listener.ArticlesDownloadCompleteListener;
+import com.example.planlekcji.listener.CalendarDownloadCompleteListener;
 import com.example.planlekcji.listener.ReplacementsDownloadCompleteListener;
+import com.example.planlekcji.listener.TimetableDownloadCompleteListener;
 import com.example.planlekcji.replacements.ReplacementDataDownloader;
-import com.example.planlekcji.timetable.model.DayOfWeek;
-import com.example.planlekcji.utils.RetryHandler;
 import com.example.planlekcji.timetable.TimetableDataDownloader;
-import com.example.planlekcji.utils.ToastUtils;
+import com.example.planlekcji.timetable.model.DayOfWeek;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MainViewModel extends ViewModel {
     private final CKZiUElektrykClient client;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+
+    private Future<?> replacementsTask;
+    private Future<?> timetableTask;
+    private Future<?> articlesTask;
+    private Future<?> calendarTask;
 
     // Downloaded data
     private final MutableLiveData<List<List<Replacement>>> replacements = new MutableLiveData<>();
     private final MutableLiveData<Map<DayOfWeek, List<Lesson>>> timetable = new MutableLiveData<>();
+    private final MutableLiveData<List<Article>> articles = new MutableLiveData<>();
+    private final MutableLiveData<Calendar> calendar = new MutableLiveData<>();
+
+    // Error notification LiveData (string resource ID)
+    private final MutableLiveData<Integer> toastErrorMessage = new MutableLiveData<>();
 
     // ProgressBar state
     private final MutableLiveData<Boolean> isLoadingReplacements = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoadingTimetable = new MutableLiveData<>(false);
-
-    // Retry handlers
-    private final RetryHandler replaceRetryHandler = new RetryHandler(this::startReplacementDownload);
-    private final RetryHandler timetableRetryHandler = new RetryHandler(this::startTimetableDownload);
+    private final MutableLiveData<Boolean> isLoadingArticles = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> isLoadingCalendar = new MutableLiveData<>(false);
 
     public MainViewModel() {
-        client = new CKZiUElektrykClient();
+        client = CKZiUElektrykClient.getInstance();
         client.setFailedApiConnectionCallback(e -> {
-            Context context = MainActivity.getContext();
-            String errorMessage = context.getString(R.string.toastErrorMessage_failedApiConnection);
-
-            ToastUtils.showToast(context, errorMessage, true);
+            toastErrorMessage.postValue(R.string.toastErrorMessage_failedApiConnection);
         });
 
         client.setFailedRouteRespondCallback(errorResponse -> {
             System.err.println("Error occurred: " + errorResponse.getMessage());
-            String errMess = MainActivity.getContext().getString(R.string.toast_errorMessage);
-            ToastUtils.showToast(MainActivity.getContext(), errMess, false);
+            toastErrorMessage.postValue(R.string.toast_errorMessage);
         });
     }
 
     public void fetchData() {
         startReplacementDownload();
         startTimetableDownload();
+        startArticlesDownload();
+        startCalendarDownload();
     }
 
     public void fetchReplacements() {
@@ -64,40 +81,154 @@ public class MainViewModel extends ViewModel {
         startTimetableDownload();
     }
 
+    public void fetchArticles() {
+        startArticlesDownload();
+    }
+
+    public void forceFetchArticles() {
+        Context context = MainActivity.getContext();
+        if (context != null) {
+            RefreshCooldownManager.getInstance(context).invalidate(RefreshDataType.ARTICLES);
+        }
+        startArticlesDownload();
+    }
+
+    public void fetchCalendar() {
+        startCalendarDownload();
+    }
+
+    public void forceFetchCalendar() {
+        Context context = MainActivity.getContext();
+        if (context != null) {
+            RefreshCooldownManager.getInstance(context).invalidate(RefreshDataType.CALENDAR);
+        }
+        startCalendarDownload();
+    }
+
     private void startReplacementDownload() {
+        if (replacementsTask != null && !replacementsTask.isDone()) {
+            replacementsTask.cancel(true);
+        }
         isLoadingReplacements.postValue(true);
         ReplacementDataDownloader downloader = new ReplacementDataDownloader(client, new ReplacementsDownloadCompleteListener() {
             @Override
-            public void onDownloadComplete(List<List<Replacement>> replacementList) {
+            public void onCacheLoaded(List<List<Replacement>> replacementList) {
                 replacements.postValue(replacementList);
+            }
+
+            @Override
+            public void onDownloadComplete(List<List<Replacement>> replacementList) {
+                if (!Objects.equals(replacements.getValue(), replacementList)) {
+                    replacements.postValue(replacementList);
+                }
                 isLoadingReplacements.postValue(false);
             }
 
             @Override
             public void onDownloadFailed() {
                 isLoadingReplacements.postValue(false);
-                replaceRetryHandler.handleRetry();
             }
         });
-        new Thread(downloader).start();
+        replacementsTask = executorService.submit(downloader);
     }
 
     private void startTimetableDownload() {
+        if (timetableTask != null && !timetableTask.isDone()) {
+            timetableTask.cancel(true);
+        }
         isLoadingTimetable.postValue(true);
         TimetableDataDownloader downloader = new TimetableDataDownloader(client, new TimetableDownloadCompleteListener() {
             @Override
-            public void onDownloadComplete(Map<DayOfWeek, List<Lesson>> timetableMap) {
+            public void onCacheLoaded(Map<DayOfWeek, List<Lesson>> timetableMap) {
                 timetable.postValue(timetableMap);
+            }
+
+            @Override
+            public void onDownloadComplete(Map<DayOfWeek, List<Lesson>> timetableMap) {
+                if (timetable.getValue() != timetableMap && !Objects.equals(timetable.getValue(), timetableMap)) {
+                    timetable.postValue(timetableMap);
+                }
                 isLoadingTimetable.postValue(false);
             }
 
             @Override
             public void onDownloadFailed() {
                 isLoadingTimetable.postValue(false);
-                timetableRetryHandler.handleRetry();
             }
         });
-        new Thread(downloader).start();
+        timetableTask = executorService.submit(downloader);
+    }
+
+    private void startArticlesDownload() {
+        if (articlesTask != null && !articlesTask.isDone()) {
+            articlesTask.cancel(true);
+        }
+        isLoadingArticles.postValue(true);
+        ArticleDataDownloader downloader = new ArticleDataDownloader(client, new ArticlesDownloadCompleteListener() {
+            @Override
+            public void onCacheLoaded(List<Article> articleList) {
+                articles.postValue(articleList);
+            }
+
+            @Override
+            public void onDownloadComplete(List<Article> articleList) {
+                if (!Objects.equals(articles.getValue(), articleList)) {
+                    articles.postValue(articleList);
+                }
+                isLoadingArticles.postValue(false);
+            }
+
+            @Override
+            public void onDownloadFailed() {
+                isLoadingArticles.postValue(false);
+            }
+        });
+        articlesTask = executorService.submit(downloader);
+    }
+
+    private void startCalendarDownload() {
+        if (calendarTask != null && !calendarTask.isDone()) {
+            calendarTask.cancel(true);
+        }
+        isLoadingCalendar.postValue(true);
+        CalendarDataDownloader downloader = new CalendarDataDownloader(client, new CalendarDownloadCompleteListener() {
+            @Override
+            public void onCacheLoaded(Calendar calendarData) {
+                calendar.postValue(calendarData);
+            }
+
+            @Override
+            public void onDownloadComplete(Calendar calendarData) {
+                if (!Objects.equals(calendar.getValue(), calendarData)) {
+                    calendar.postValue(calendarData);
+                }
+                isLoadingCalendar.postValue(false);
+            }
+
+            @Override
+            public void onDownloadFailed() {
+                isLoadingCalendar.postValue(false);
+            }
+        });
+        calendarTask = executorService.submit(downloader);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (replacementsTask != null) {
+            replacementsTask.cancel(true);
+        }
+        if (timetableTask != null) {
+            timetableTask.cancel(true);
+        }
+        if (articlesTask != null) {
+            articlesTask.cancel(true);
+        }
+        if (calendarTask != null) {
+            calendarTask.cancel(true);
+        }
+        executorService.shutdownNow();
     }
 
     // LiveData getters
@@ -109,6 +240,14 @@ public class MainViewModel extends ViewModel {
         return replacements;
     }
 
+    public LiveData<List<Article>> getArticlesLiveData() {
+        return articles;
+    }
+
+    public LiveData<Calendar> getCalendarLiveData() {
+        return calendar;
+    }
+
     public LiveData<Boolean> getIsLoadingReplacements() {
         return isLoadingReplacements;
     }
@@ -117,7 +256,76 @@ public class MainViewModel extends ViewModel {
         return isLoadingTimetable;
     }
 
+    public LiveData<Boolean> getIsLoadingArticles() {
+        return isLoadingArticles;
+    }
+
+    public LiveData<Boolean> getIsLoadingCalendar() {
+        return isLoadingCalendar;
+    }
+
+    public LiveData<Integer> getToastErrorMessage() {
+        return toastErrorMessage;
+    }
+
+    public void clearToastErrorMessage() {
+        toastErrorMessage.setValue(null);
+    }
+
     public CKZiUElektrykClient getClient() {
         return client;
+    }
+
+    private boolean settingsChanged = false;
+    private boolean timetableNeedsRefresh = true;
+    private boolean replacementsNeedsRefresh = true;
+    private boolean articlesNeedsRefresh = true;
+    private boolean calendarNeedsRefresh = true;
+
+    public boolean isSettingsChanged() {
+        return settingsChanged;
+    }
+
+    public void setSettingsChanged(boolean settingsChanged) {
+        this.settingsChanged = settingsChanged;
+    }
+
+    public boolean isTimetableNeedsRefresh() {
+        return timetableNeedsRefresh;
+    }
+
+    public void setTimetableNeedsRefresh(boolean timetableNeedsRefresh) {
+        this.timetableNeedsRefresh = timetableNeedsRefresh;
+    }
+
+    public boolean isReplacementsNeedsRefresh() {
+        return replacementsNeedsRefresh;
+    }
+
+    public void setReplacementsNeedsRefresh(boolean replacementsNeedsRefresh) {
+        this.replacementsNeedsRefresh = replacementsNeedsRefresh;
+    }
+
+    public boolean isArticlesNeedsRefresh() {
+        return articlesNeedsRefresh;
+    }
+
+    public void setArticlesNeedsRefresh(boolean articlesNeedsRefresh) {
+        this.articlesNeedsRefresh = articlesNeedsRefresh;
+    }
+
+    public boolean isCalendarNeedsRefresh() {
+        return calendarNeedsRefresh;
+    }
+
+    public void setCalendarNeedsRefresh(boolean calendarNeedsRefresh) {
+        this.calendarNeedsRefresh = calendarNeedsRefresh;
+    }
+
+    public void markAllAsNeedsRefresh() {
+        timetableNeedsRefresh = true;
+        replacementsNeedsRefresh = true;
+        articlesNeedsRefresh = true;
+        calendarNeedsRefresh = true;
     }
 }

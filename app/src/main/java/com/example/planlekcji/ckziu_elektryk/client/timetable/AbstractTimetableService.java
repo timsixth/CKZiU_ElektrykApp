@@ -60,39 +60,48 @@ public abstract class AbstractTimetableService extends ClientService implements 
     }
 
     @Override
-    public Map<DayOfWeek, List<Lesson>> getTimetable(String name) {
+    public JsonObject getTimetableJsonObject(String name) {
         ParamValidator.checkNotNullAndNotEmpty(name);
 
         APIResponseCall apiResponseCall = getData(oneSchoolEntryEndpoint
                 .withPlaceholders(Map.of("{school_entry_shortcut}", name)));
 
-        if (!apiResponseCall.hasResponse()) return Collections.emptyMap();
+        if (!apiResponseCall.hasResponse()) return null;
 
         return apiResponseCall.error(handleError())
-                .success(successResponse -> {
-                    Map<DayOfWeek, List<Lesson>> timetable = new LinkedHashMap<>();
-                    JsonObject jsonObject = successResponse.getJsonElement().getAsJsonObject();
+                .success(successResponse -> successResponse.getJsonElement().getAsJsonObject());
+    }
 
-                    for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
-                        String shortcut = dayOfWeek.name();
+    @Override
+    public Map<DayOfWeek, List<Lesson>> getTimetable(String name) {
+        JsonObject jsonObject = getTimetableJsonObject(name);
+        if (jsonObject == null) return Collections.emptyMap();
+        return parseTimetable(jsonObject);
+    }
 
-                        if (!jsonObject.has(shortcut)) continue;
+    public static Map<DayOfWeek, List<Lesson>> parseTimetable(JsonObject jsonObject) {
+        Map<DayOfWeek, List<Lesson>> timetable = new LinkedHashMap<>();
+        if (jsonObject == null) return timetable;
 
-                        JsonArray jsonArray = jsonObject.get(shortcut).getAsJsonArray();
+        for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
+            String shortcut = dayOfWeek.name();
 
-                        if (jsonArray.isEmpty()) {
-                            timetable.put(dayOfWeek, Collections.emptyList());
-                        }
+            if (!jsonObject.has(shortcut)) continue;
 
-                        List<Lesson> lessons = jsonObject.get(shortcut).getAsJsonArray().asList()
-                                .stream()
-                                .map(jsonElement -> LessonFactory.createLesson(jsonElement.getAsJsonObject()))
-                                .collect(Collectors.toList());
+            JsonArray jsonArray = jsonObject.get(shortcut).getAsJsonArray();
 
-                        timetable.put(dayOfWeek, lessons);
-                    }
+            if (jsonArray.isEmpty()) {
+                timetable.put(dayOfWeek, Collections.emptyList());
+            } else {
+                List<Lesson> lessons = jsonArray.asList()
+                        .stream()
+                        .map(jsonElement -> LessonFactory.createLesson(jsonElement.getAsJsonObject()))
+                        .collect(Collectors.toList());
 
-                    return timetable;
-                });
+                timetable.put(dayOfWeek, lessons);
+            }
+        }
+
+        return timetable;
     }
 }

@@ -5,19 +5,17 @@
     <string name="classroomTokenKey" translatable="false">classroomToken</string>
 
     <string name="selectedTypeOfTimetableKey" translatable="false">selectedTypeOfTimetable</string>
-    <string name="searchKey" translatable="false">searchingKey</string>
     <string name="navigate_timetable">Timetable</string>
     <string name="navigate_replacements">Replacements</string>
+    <string name="navigate_articles">Articles</string>
+    <string name="navigate_calendar">Calendar</string>
     <string name="navigate_settings">Settings</string>
-    <string name="settingsButton_description">Open settings</string>
     <string name="mondayShortcut">Mon</string>
     <string name="tuesdayShortcut">Tue</string>
     <string name="wednesdayShortcut">Wed</string>
     <string name="thursdayShortcut">Thu</string>
     <string name="fridayShortcut">Fri</string>
-    <string name="searchHint_searchBar">Search</string>
     <string name="noResults_text">No results. Below are all unfiltered replacements.</string>
-    <string name="settings_header">Settings</string>
     <string name="timetableType">Timetable type</string>
     <string name="selectClass">Select class</string>
     <string name="selectTeacher">Select teacher</string>
@@ -26,16 +24,56 @@
     <string name="teachers">Teachers</string>
     <string name="classrooms">Classrooms</string>
     <string name="goBackButton_description">Go back</string>
-    <string name="settings_extraInfo">This application was created by a graduate of the CKZiU Elektryk school</string>
     <string name="no_replacements">No replacements</string>
+    <string name="no_replacements_description">All lessons are taking place according to schedule</string>
+    <string name="no_articles">No articles available</string>
+    <string name="photo_counter_format" translatable="false">%1$d / %2$d</string>
+    <string name="article_image_description">Article image</string>
+    <string name="previous_photo">Previous photo</string>
+    <string name="next_photo">Next photo</string>
+    <string name="no_calendar_events">No calendar events available</string>
+    <string name="lesson_label">Lesson %1$s</string>
+    <string name="replacement_details_format" translatable="false">%1$s - %2$s</string>
     <string name="toastErrorMessage_failedApiConnection">Unable to connect to the server.</string>
     <string name="toastErrorMessage_noInternetConnection">Internet connection is required.</string>
-    <string name="toastErrorMessage_noInternetConnectionRetry">No internet connection. Trying to reconnect…</string>
     <string name="lessonCard_placeholder_lessonNumber" translatable="false">1</string>
     <string name="lessonCard_placeholder_lessonTimeRange" translatable="false">08:00 - 08:45</string>
     <string name="no_lessons_today">No lessons scheduled for this day</string>
-    <string name="placeholder_replacement_dayTitle" translatable="false">[P]2025-11-10 Poniedziałek</string>
-    <string name="placeholder_replacement_teacherName" translatable="false">[P]Adam Nowak</string>
-    <string name="placeholder_replacement_replacementDetails" translatable="false">[P]Cały Dzień | Nieobecność</string>
     <string name="toast_errorMessage">An error occurred. Please try again later.</string>
+    <string name="empty_state_icon_description">Empty state icon</string>
+    <string name="empty_state_timetable_title">No timetable</string>
+    <string name="empty_state_timetable_description">Timetable data is not available at the moment</string>
+    <string name="empty_state_articles_title">No articles</string>
+    <string name="empty_state_articles_description">No articles are available at the moment</string>
+    <string name="empty_state_calendar_title">No events</string>
+    <string name="empty_state_calendar_description">No calendar events are available at the moment</string>
+    <string name="empty_state_day_title">No lessons</string>
+    <string name="empty_state_day_description">No lessons scheduled for this day</string>
+    <string name="offline_mode">No internet connection</string>
+    <string name="gallery_unavailable_offline">Photo gallery requires an internet connection</string>
+    <string name="settings_offline_notice_title">Internet connection required</string>
+    <string name="settings_offline_notice_description">Changing the timetable or user type requires an internet connection. Connect to the internet to change these settings.</string>
+    <string name="settings_groups_title">My groups</string>
+    <string name="settings_groups_description">Press and hold a lesson tile directly on the timetable to select your group or hide a free period.</string>
+    <string name="settings_groups_hide_unselected">Hide unselected groups</string>
+    <string name="settings_groups_hide_unselected_description">Completely hides unselected lessons instead of dimming them.</string>
+    <string name="settings_groups_lock_selection">Lock editing on timetable</string>
+    <string name="settings_groups_lock_selection_description">Prevents accidental group changes when touching lesson tiles on the timetable.</string>
+    <string name="settings_groups_reset">Reset group selections</string>
+    <string name="settings_groups_reset_success">Group selections have been reset</string>
+    <string name="settings_groups_editing_locked">Timetable editing is locked in Settings</string>
+    <string name="refresh_up_to_date">Data is up to date</string>
+    <string name="settings_about_title">About application</string>
+    <string name="settings_about_app_name">Timetable CKZiU \"Elektryk\"</string>
+    <string name="settings_about_version">App version</string>
+    <string name="settings_about_github">Source code</string>
+    <string name="settings_about_github_desc">Code is open source and available on GitHub</string>
+    <string name="settings_about_privacy">Privacy policy</string>
+    <string name="settings_about_privacy_desc">No personal data is collected</string>
+    <string name="settings_about_contact">Contact</string>
+    <string name="settings_about_contact_desc">rychter47@gmail.com</string>
+    <string name="settings_about_contact_copied">Email address copied to clipboard</string>
+    <string name="settings_about_contact_subject">[Timetable] Contact</string>
+    <string name="error_cannot_open_link">Cannot open link</string>
+    <string name="error_cannot_send_email">Cannot open email application</string>
 </resources>

@@ -5,28 +5,35 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
-import com.example.planlekcji.ckziu_elektryk.client.Config;
 import com.example.planlekcji.fragments.model.ViewPagerAdapter;
-import com.example.planlekcji.utils.ToastUtils;
-
+import com.example.planlekcji.utils.NetworkMonitor;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-
 
 public class MainActivity extends AppCompatActivity {
     private static Context appContext;
     private MainViewModel mainViewModel;
+    private NetworkMonitor networkMonitor;
 
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
@@ -34,16 +41,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Initialize the application context for other functions.
-        appContext = this;
+        appContext = getApplicationContext();
 
         // Obtain the MainViewModel instance to update data on settings changes
         mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
-
-        // Check for internet connection; exit the app if not connected.
-        if (!Config.getOrCreateConfig().isPreviewMode() && !isOnline()) {
-            String errorMessage = getString(R.string.toastErrorMessage_noInternetConnection);
-            ToastUtils.showToast(this, errorMessage, true);
-        }
 
         // Lock the orientation of the screen to portrait mode.
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -54,29 +55,92 @@ public class MainActivity extends AppCompatActivity {
         // Set the content view for the main activity.
         setContentView(R.layout.activity_main);
 
-        // Progress bar
-        ProgressBar progressBar = findViewById(R.id.progressBar);
-
-        mainViewModel.getIsLoadingReplacements().observe(this, isLoading ->
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
-        );
-
-        mainViewModel.getIsLoadingTimetable().observe(this, isLoading ->
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
-        );
+        // Apply window insets to avoid drawing behind system bars (status bar, navigation bar)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.constraintLayout), (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return windowInsets;
+        });
 
         // Set adapter
         ViewPager2 viewPager2_appContent = findViewById(R.id.viewPager2_appContent);
+        SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeRefresh_main);
 
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
         viewPager2_appContent.setAdapter(adapter);
-        viewPager2_appContent.setOffscreenPageLimit(3);
-        viewPager2_appContent.setUserInputEnabled(false);
+        viewPager2_appContent.setOffscreenPageLimit(4);
+        viewPager2_appContent.setUserInputEnabled(true);
+
+        // Network monitoring and offline banner
+        networkMonitor = new NetworkMonitor(this);
+        View layoutOfflineBanner = findViewById(R.id.layout_offlineBanner);
+
+        networkMonitor.getIsOnlineLiveData().observe(this, isOnline -> {
+            if (layoutOfflineBanner != null) {
+                layoutOfflineBanner.setVisibility(Boolean.TRUE.equals(isOnline) ? View.GONE : View.VISIBLE);
+            }
+            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent.getCurrentItem());
+        });
+
+        // Swipe to Refresh
+        if (swipeRefresh != null) {
+            swipeRefresh.setProgressBackgroundColorSchemeColor(Color.parseColor("#2C2C2C"));
+            swipeRefresh.setColorSchemeColors(Color.parseColor("#FFC107"));
+            updateSwipeRefreshState(swipeRefresh, viewPager2_appContent.getCurrentItem());
+            swipeRefresh.setOnRefreshListener(() -> {
+                int currentTab = viewPager2_appContent.getCurrentItem();
+                switch (currentTab) {
+                    case ViewPagerAdapter.TIMETABLE_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.TIMETABLE, () -> mainViewModel.fetchTimetable());
+                    case ViewPagerAdapter.REPLACEMENTS_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.REPLACEMENTS, () -> mainViewModel.fetchReplacements());
+                    case ViewPagerAdapter.ARTICLES_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.ARTICLES, () -> mainViewModel.forceFetchArticles());
+                    case ViewPagerAdapter.CALENDAR_TAB_ID -> handleManualRefresh(swipeRefresh, RefreshDataType.CALENDAR, () -> mainViewModel.forceFetchCalendar());
+                    default -> swipeRefresh.setRefreshing(false);
+                }
+            });
+        }
+
+        // Synchronize SwipeRefreshLayout state with ViewPager2 page changes
         viewPager2_appContent.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                // Timetable needs its own horizontal swipe handling.
-                viewPager2_appContent.setUserInputEnabled(position != ViewPagerAdapter.TIMETABLE_TAB_ID);
+                super.onPageSelected(position);
+                updateSwipeRefreshState(swipeRefresh, position);
+            }
+        });
+
+        // Progress indicator
+        LinearProgressIndicator progressBar = findViewById(R.id.linearProgressBar);
+
+        androidx.lifecycle.Observer<Boolean> loadingObserver = unused -> {
+            boolean isLoading = Boolean.TRUE.equals(mainViewModel.getIsLoadingReplacements().getValue())
+                    || Boolean.TRUE.equals(mainViewModel.getIsLoadingTimetable().getValue())
+                    || Boolean.TRUE.equals(mainViewModel.getIsLoadingArticles().getValue())
+                    || Boolean.TRUE.equals(mainViewModel.getIsLoadingCalendar().getValue());
+
+            boolean isSwipeRefreshing = swipeRefresh != null && swipeRefresh.isRefreshing();
+
+            if (isLoading) {
+                if (!isSwipeRefreshing) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
+            } else {
+                progressBar.setVisibility(View.GONE);
+                if (swipeRefresh != null) {
+                    swipeRefresh.setRefreshing(false);
+                }
+            }
+        };
+
+        mainViewModel.getIsLoadingReplacements().observe(this, loadingObserver);
+        mainViewModel.getIsLoadingTimetable().observe(this, loadingObserver);
+        mainViewModel.getIsLoadingArticles().observe(this, loadingObserver);
+        mainViewModel.getIsLoadingCalendar().observe(this, loadingObserver);
+
+        // Error message Toast observer
+        mainViewModel.getToastErrorMessage().observe(this, resId -> {
+            if (resId != null) {
+                Toast.makeText(this, resId, Toast.LENGTH_SHORT).show();
+                mainViewModel.clearToastErrorMessage();
             }
         });
 
@@ -84,47 +148,140 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout_navigate = findViewById(R.id.tabLayout_navigate);
         new TabLayoutMediator(tabLayout_navigate, viewPager2_appContent, (tab, position) -> {
             switch (position) {
-                case 0:
+                case ViewPagerAdapter.TIMETABLE_TAB_ID:
                     tab.setText(R.string.navigate_timetable);
                     tab.setIcon(R.drawable.timetable_icon);
                     break;
-                case 1:
+                case ViewPagerAdapter.REPLACEMENTS_TAB_ID:
                     tab.setText(R.string.navigate_replacements);
                     tab.setIcon(R.drawable.replacement_icon);
                     break;
-                case 2:
+                case ViewPagerAdapter.ARTICLES_TAB_ID:
+                    tab.setText(R.string.navigate_articles);
+                    tab.setIcon(R.drawable.articles_icon);
+                    break;
+                case ViewPagerAdapter.CALENDAR_TAB_ID:
+                    tab.setText(R.string.navigate_calendar);
+                    tab.setIcon(R.drawable.calendar_icon);
+                    break;
+                case ViewPagerAdapter.SETTINGS_TAB_ID:
                     tab.setText(R.string.navigate_settings);
                     tab.setIcon(R.drawable.settings_icon);
                     break;
             }
         }).attach();
 
-        // Add listener to refresh data upon exiting settings
         tabLayout_navigate.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
-            public void onTabSelected(TabLayout.Tab tab) {}
+            public void onTabSelected(TabLayout.Tab tab) {
+                updateSwipeRefreshState(swipeRefresh, tab.getPosition());
+                triggerTabFetch(tab.getPosition());
+            }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-                // Update data upon exiting settings
-                if(tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
-                    mainViewModel.fetchData();
+                // When exiting settings after changes, mark dependent tabs as needing refresh
+                if (tab.getPosition() == ViewPagerAdapter.SETTINGS_TAB_ID) {
+                    if (mainViewModel.isSettingsChanged()) {
+                        mainViewModel.setSettingsChanged(false);
+                        mainViewModel.setTimetableNeedsRefresh(true);
+                        mainViewModel.setReplacementsNeedsRefresh(true);
+
+                        RefreshCooldownManager cooldown = RefreshCooldownManager.getInstance(MainActivity.this);
+                        if (cooldown != null) {
+                            cooldown.invalidate(RefreshDataType.TIMETABLE);
+                            cooldown.invalidate(RefreshDataType.REPLACEMENTS);
+                        }
+                    }
                 }
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
         });
+
+        // Trigger initial data load for the default visible tab (both online and offline)
+        triggerCurrentTabFetch(viewPager2_appContent);
+    }
+
+    private void updateSwipeRefreshState(SwipeRefreshLayout swipeRefresh, int currentPosition) {
+        if (swipeRefresh != null) {
+            boolean canRefresh = isOnline() && currentPosition != ViewPagerAdapter.SETTINGS_TAB_ID;
+            swipeRefresh.setEnabled(canRefresh);
+        }
+    }
+
+    private void handleManualRefresh(SwipeRefreshLayout swipeRefresh, RefreshDataType type, Runnable refreshAction) {
+        RefreshCooldownManager cooldown = RefreshCooldownManager.getInstance(this);
+        if (cooldown != null && !cooldown.canManualRefresh(type)) {
+            swipeRefresh.setRefreshing(false);
+            Toast.makeText(this, R.string.refresh_up_to_date, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        refreshAction.run();
+    }
+
+    private void triggerCurrentTabFetch(ViewPager2 viewPager) {
+        triggerTabFetch(viewPager.getCurrentItem());
+    }
+
+    private void triggerTabFetch(int position) {
+        switch (position) {
+            case ViewPagerAdapter.TIMETABLE_TAB_ID -> {
+                if (mainViewModel.isTimetableNeedsRefresh()) {
+                    mainViewModel.setTimetableNeedsRefresh(false);
+                    mainViewModel.fetchTimetable();
+                }
+            }
+            case ViewPagerAdapter.REPLACEMENTS_TAB_ID -> {
+                if (mainViewModel.isReplacementsNeedsRefresh()) {
+                    mainViewModel.setReplacementsNeedsRefresh(false);
+                    mainViewModel.fetchReplacements();
+                }
+            }
+            case ViewPagerAdapter.ARTICLES_TAB_ID -> {
+                if (mainViewModel.isArticlesNeedsRefresh()) {
+                    mainViewModel.setArticlesNeedsRefresh(false);
+                    mainViewModel.fetchArticles();
+                }
+            }
+            case ViewPagerAdapter.CALENDAR_TAB_ID -> {
+                if (mainViewModel.isCalendarNeedsRefresh()) {
+                    mainViewModel.setCalendarNeedsRefresh(false);
+                    mainViewModel.fetchCalendar();
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (networkMonitor != null) {
+            networkMonitor.unregisterCallback();
+        }
     }
 
     public static Context getContext() {
         return appContext;
     }
 
+    public NetworkMonitor getNetworkMonitor() {
+        return networkMonitor;
+    }
+
     public boolean isOnline() {
+        if (networkMonitor != null) {
+            return networkMonitor.isCurrentlyOnline();
+        }
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnectedOrConnecting();
+        if (cm == null) return false;
+
+        Network network = cm.getActiveNetwork();
+        if (network == null) return false;
+
+        NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
     }
 
     public static SchoolEntryType getTimetableType() {

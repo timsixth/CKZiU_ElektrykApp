@@ -8,6 +8,8 @@ import java.util.Map;
 
 public interface TimetableDownloadCompleteListener {
 
+    default void onCacheLoaded(Map<DayOfWeek, List<Lesson>> timetableMap) {}
+
     void onDownloadComplete(Map<DayOfWeek, List<Lesson>> timetableMap);
 
     void onDownloadFailed();
