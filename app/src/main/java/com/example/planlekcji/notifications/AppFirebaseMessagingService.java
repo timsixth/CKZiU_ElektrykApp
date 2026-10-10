@@ -8,6 +8,8 @@ import com.example.planlekcji.MainActivity;
 import com.example.planlekcji.R;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.fragments.ViewPagerAdapter;
+import com.example.planlekcji.utils.RefreshCooldownManager;
+import com.example.planlekcji.utils.RefreshDataType;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -29,10 +31,6 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
-        if (!NotificationPreferences.isNotificationsMasterEnabled(this)) {
-            return;
-        }
-
         Map<String, String> data = remoteMessage.getData();
         if (data.isEmpty()) {
             return;
@@ -52,10 +50,6 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
 
     // Handles timetable update notifications for the currently selected timetable.
     private void handleTimetableMessage(Map<String, String> data) {
-        if (!NotificationPreferences.isNotifyTimetableEnabled(this)) {
-            return;
-        }
-
         SchoolEntryType currentType = MainActivity.getTimetableType(this);
         String currentToken = MainActivity.getToken(this, currentType);
 
@@ -63,7 +57,7 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
         String msgEntryType = data.get("entry_type");
 
         if (msgToken != null && !msgToken.trim().isEmpty()) {
-            if (!msgToken.trim().equalsIgnoreCase(currentToken.trim())) {
+            if (currentToken == null || !msgToken.trim().equalsIgnoreCase(currentToken.trim())) {
                 return;
             }
         }
@@ -74,17 +68,22 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
             }
         }
 
-        String displayToken = (currentToken != null && !currentToken.trim().isEmpty()) ? currentToken : msgToken;
-        NotificationHelper.showTimetableNotification(this, displayToken);
+        RefreshCooldownManager cooldown = RefreshCooldownManager.getInstance(this);
+        if (cooldown != null) {
+            cooldown.invalidate(RefreshDataType.TIMETABLE);
+        }
         LiveUpdateRelay.emit(LiveUpdateRelay.UpdateType.TIMETABLE);
+
+        boolean notificationsAllowed = NotificationPreferences.isNotificationsMasterEnabled(this)
+                && NotificationPreferences.isNotifyTimetableEnabled(this);
+        if (notificationsAllowed) {
+            String displayToken = (currentToken != null && !currentToken.trim().isEmpty()) ? currentToken : msgToken;
+            NotificationHelper.showTimetableNotification(this, displayToken);
+        }
     }
 
     // Handles substitution notifications without individual lesson details.
     private void handleReplacementMessage(Map<String, String> data) {
-        if (!NotificationPreferences.isNotifyReplacementsEnabled(this)) {
-            return;
-        }
-
         SchoolEntryType currentType = MainActivity.getTimetableType(this);
         String currentToken = MainActivity.getToken(this, currentType);
 
@@ -96,57 +95,77 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
             classToken = currentToken;
         }
 
-        String notificationTitle = getString(R.string.notification_replacement_title);
-        String notificationBody;
-        if (isTeacherTarget) {
-            notificationBody = getString(R.string.notification_replacement_teacher_body);
-        } else if (classToken != null && !classToken.trim().isEmpty()) {
-            notificationBody = getString(R.string.notification_replacement_class_body, classToken.trim());
-        } else {
-            notificationBody = getString(R.string.notification_replacement_general_body);
+        RefreshCooldownManager cooldown = RefreshCooldownManager.getInstance(this);
+        if (cooldown != null) {
+            cooldown.invalidate(RefreshDataType.REPLACEMENTS);
         }
 
-        boolean isForeground = LiveUpdateRelay.hasActiveListeners();
-        if (!isForeground) {
+        boolean notificationsAllowed = NotificationPreferences.isNotificationsMasterEnabled(this)
+                && NotificationPreferences.isNotifyReplacementsEnabled(this);
+
+        if (notificationsAllowed) {
+            String notificationTitle = getString(R.string.notification_replacement_title);
+            String notificationBody;
             if (isTeacherTarget) {
-                NotificationHelper.showTeacherReplacementNotification(this);
+                notificationBody = getString(R.string.notification_replacement_teacher_body);
+            } else if (classToken != null && !classToken.trim().isEmpty()) {
+                notificationBody = getString(R.string.notification_replacement_class_body, classToken.trim());
             } else {
-                NotificationHelper.showClassReplacementNotification(this, classToken);
+                notificationBody = getString(R.string.notification_replacement_general_body);
             }
-        }
 
-        LiveUpdateRelay.emit(new LiveUpdateRelay.LiveUpdateEvent(
-                LiveUpdateRelay.UpdateType.REPLACEMENTS,
-                notificationTitle,
-                notificationBody,
-                ViewPagerAdapter.REPLACEMENTS_TAB_ID
-        ));
+            boolean isForeground = LiveUpdateRelay.hasActiveListeners();
+            if (!isForeground) {
+                if (isTeacherTarget) {
+                    NotificationHelper.showTeacherReplacementNotification(this);
+                } else {
+                    NotificationHelper.showClassReplacementNotification(this, classToken);
+                }
+            }
+
+            LiveUpdateRelay.emit(new LiveUpdateRelay.LiveUpdateEvent(
+                    LiveUpdateRelay.UpdateType.REPLACEMENTS,
+                    notificationTitle,
+                    notificationBody,
+                    ViewPagerAdapter.REPLACEMENTS_TAB_ID
+            ));
+        } else {
+            LiveUpdateRelay.emit(LiveUpdateRelay.UpdateType.REPLACEMENTS);
+        }
     }
 
     // Handles newly published school article notifications.
     private void handleArticleMessage(Map<String, String> data) {
-        if (!NotificationPreferences.isNotifyArticlesEnabled(this)) {
-            return;
+        RefreshCooldownManager cooldown = RefreshCooldownManager.getInstance(this);
+        if (cooldown != null) {
+            cooldown.invalidate(RefreshDataType.ARTICLES);
         }
 
-        String title = data.get("title");
-        if (title == null || title.trim().isEmpty()) {
-            title = data.get("body");
+        boolean notificationsAllowed = NotificationPreferences.isNotificationsMasterEnabled(this)
+                && NotificationPreferences.isNotifyArticlesEnabled(this);
+
+        if (notificationsAllowed) {
+            String title = data.get("title");
+            if (title == null || title.trim().isEmpty()) {
+                title = data.get("body");
+            }
+
+            String notificationTitle = getString(R.string.notification_article_title);
+            String notificationBody = (title != null && !title.trim().isEmpty()) ? title.trim() : "";
+
+            boolean isForeground = LiveUpdateRelay.hasActiveListeners();
+            if (!isForeground) {
+                NotificationHelper.showArticleNotification(this, title);
+            }
+
+            LiveUpdateRelay.emit(new LiveUpdateRelay.LiveUpdateEvent(
+                    LiveUpdateRelay.UpdateType.ARTICLES,
+                    notificationTitle,
+                    notificationBody,
+                    ViewPagerAdapter.ARTICLES_TAB_ID
+            ));
+        } else {
+            LiveUpdateRelay.emit(LiveUpdateRelay.UpdateType.ARTICLES);
         }
-
-        String notificationTitle = getString(R.string.notification_article_title);
-        String notificationBody = (title != null && !title.trim().isEmpty()) ? title.trim() : "";
-
-        boolean isForeground = LiveUpdateRelay.hasActiveListeners();
-        if (!isForeground) {
-            NotificationHelper.showArticleNotification(this, title);
-        }
-
-        LiveUpdateRelay.emit(new LiveUpdateRelay.LiveUpdateEvent(
-                LiveUpdateRelay.UpdateType.ARTICLES,
-                notificationTitle,
-                notificationBody,
-                ViewPagerAdapter.ARTICLES_TAB_ID
-        ));
     }
 }

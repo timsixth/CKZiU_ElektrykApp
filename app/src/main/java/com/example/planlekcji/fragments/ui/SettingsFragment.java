@@ -63,6 +63,7 @@ public class SettingsFragment extends Fragment {
                     NotificationPreferences.setNotificationsMasterEnabled(requireContext(), false);
                     setAllChildNotificationsEnabled(false);
                     updateNotificationUi(false);
+                    FcmTopicManager.syncSubscriptions(requireContext());
                     Toast.makeText(requireContext(), R.string.settings_notifications_permission_denied, Toast.LENGTH_LONG).show();
                 }
             });
@@ -192,7 +193,7 @@ public class SettingsFragment extends Fragment {
                     NotificationPreferences.setNotificationsMasterEnabled(requireContext(), false);
                     setAllChildNotificationsEnabled(false);
                     updateNotificationUi(false);
-                    FcmTopicManager.unsubscribeFromAll(requireContext());
+                    FcmTopicManager.syncSubscriptions(requireContext());
                 }
             });
             if (layoutMaster != null) {
@@ -319,7 +320,7 @@ public class SettingsFragment extends Fragment {
                     switchMaster.setChecked(false);
                 }
                 updateNotificationUi(false);
-                FcmTopicManager.unsubscribeFromAll(context);
+                FcmTopicManager.syncSubscriptions(context);
             } finally {
                 isUpdatingNotificationSwitches = false;
             }

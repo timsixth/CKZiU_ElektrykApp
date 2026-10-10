@@ -55,14 +55,9 @@ public final class FcmTopicManager {
         }
     }
 
-    // Synchronizes all FCM topic subscriptions with the current user preferences and selected entry.
+    // Synchronizes all FCM topic subscriptions so data is always received for background/live updates.
     public static void syncSubscriptions(Context context) {
         if (context == null) return;
-
-        boolean masterEnabled = NotificationPreferences.isNotificationsMasterEnabled(context);
-        boolean timetableEnabled = NotificationPreferences.isNotifyTimetableEnabled(context);
-        boolean replacementsEnabled = NotificationPreferences.isNotifyReplacementsEnabled(context);
-        boolean articlesEnabled = NotificationPreferences.isNotifyArticlesEnabled(context);
 
         FirebaseMessaging fcm = FirebaseMessaging.getInstance();
         SharedPreferences prefs = getPrefs(context);
@@ -70,14 +65,9 @@ public final class FcmTopicManager {
         String lastTimetableTopic = prefs.getString(PREF_LAST_TIMETABLE_TOPIC, null);
         String lastReplacementsTopic = prefs.getString(PREF_LAST_REPLACEMENTS_TOPIC, null);
 
-        // Articles topic subscription
-        if (masterEnabled && articlesEnabled) {
-            fcm.subscribeToTopic(TOPIC_ARTICLES)
-                    .addOnCompleteListener(t -> Log.d(TAG, "Subscribed to " + TOPIC_ARTICLES));
-        } else {
-            fcm.unsubscribeFromTopic(TOPIC_ARTICLES)
-                    .addOnCompleteListener(t -> Log.d(TAG, "Unsubscribed from " + TOPIC_ARTICLES));
-        }
+        // Always subscribe to articles topic for background/live data synchronization
+        fcm.subscribeToTopic(TOPIC_ARTICLES)
+                .addOnCompleteListener(t -> Log.d(TAG, "Subscribed to " + TOPIC_ARTICLES));
 
         // Timetable topic subscription is currently omitted
         SchoolEntryType currentType = MainActivity.getTimetableType(context);
@@ -91,10 +81,10 @@ public final class FcmTopicManager {
                     });
         }
 
-        // Substitutions topic subscription for class or teachers
+        // Substitutions topic subscription for class or teachers (always subscribed for silent data sync)
         String desiredReplacementsTopic = getReplacementsTopic(currentType, currentToken);
 
-        if (masterEnabled && replacementsEnabled && (!currentToken.isEmpty() || currentType == SchoolEntryType.TEACHERS)) {
+        if (!currentToken.isEmpty() || currentType == SchoolEntryType.TEACHERS) {
             if (lastReplacementsTopic != null && !lastReplacementsTopic.equals(desiredReplacementsTopic)) {
                 fcm.unsubscribeFromTopic(lastReplacementsTopic)
                         .addOnCompleteListener(t -> Log.d(TAG, "Unsubscribed old replacements: " + lastReplacementsTopic));

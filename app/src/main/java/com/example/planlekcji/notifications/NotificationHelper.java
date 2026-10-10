@@ -79,6 +79,9 @@ public final class NotificationHelper {
     }
 
     private static boolean hasNotificationPermission(Context context) {
+        if (context == null || !NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+            return false;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS)
                     == PackageManager.PERMISSION_GRANTED;
