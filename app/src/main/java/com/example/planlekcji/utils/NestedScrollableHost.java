@@ -10,19 +10,23 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
 /**
  * Wrapper layout for handling touch conflicts in nested ViewPager2 setups.
  * Based on Google's NestedScrollableHost sample.
  *
- * @see <a href="https://github.com/android/views-widgets-samples/blob/master/ViewPager2/app/src/main/java/androidx/viewpager2/integration/testapp/NestedScrollableHost.kt">Google sample</a>
+ * Ensures full gesture commitment during horizontal swipes while preserving
+ * pull-to-refresh and vertical scrolling.
  */
 public class NestedScrollableHost extends FrameLayout {
 
     private int touchSlop;
     private float initialX;
     private float initialY;
+    private boolean isGestureLocked = false;
+    private SwipeRefreshLayout lockedSwipeRefresh;
 
     public NestedScrollableHost(@NonNull Context context) {
         super(context);
@@ -39,18 +43,43 @@ public class NestedScrollableHost extends FrameLayout {
     }
 
     private ViewPager2 getParentViewPager() {
-        ViewParent parent = getParent();
-        while (parent != null) {
-            if (parent instanceof ViewPager2) {
-                return (ViewPager2) parent;
-            }
-            if (parent instanceof View) {
-                parent = ((View) parent).getParent();
-            } else {
-                break;
-            }
+        for (ViewParent p = getParent(); p != null; p = p.getParent()) {
+            if (p instanceof ViewPager2 vp) return vp;
         }
         return null;
+    }
+
+    private SwipeRefreshLayout findSwipeRefresh() {
+        for (ViewParent p = getParent(); p != null; p = p.getParent()) {
+            if (p instanceof SwipeRefreshLayout srl && srl.isEnabled()) return srl;
+        }
+        return null;
+    }
+
+    private void releaseLockedSwipeRefresh() {
+        if (lockedSwipeRefresh != null) {
+            lockedSwipeRefresh.setEnabled(true);
+            lockedSwipeRefresh = null;
+        }
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        int action = ev.getActionMasked();
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            isGestureLocked = false;
+            releaseLockedSwipeRefresh();
+        } else if (action == MotionEvent.ACTION_DOWN) {
+            isGestureLocked = false;
+            releaseLockedSwipeRefresh();
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        releaseLockedSwipeRefresh();
     }
 
     private View getChild() {
@@ -60,10 +89,8 @@ public class NestedScrollableHost extends FrameLayout {
     private boolean canChildScroll(int orientation, float delta) {
         int direction = -(int) Math.signum(delta);
         View child = getChild();
-        if (child == null) return false;
+        if (child == null || direction == 0) return false;
 
-        // Use logical page position for ViewPager2 children to avoid
-        // false positives from canScrollHorizontally() during settle animations.
         if (child instanceof ViewPager2 childPager) {
             int itemCount = childPager.getAdapter() != null ? childPager.getAdapter().getItemCount() : 0;
             int currentItem = childPager.getCurrentItem();
@@ -71,14 +98,13 @@ public class NestedScrollableHost extends FrameLayout {
             if (orientation == ViewPager2.ORIENTATION_HORIZONTAL) {
                 if (direction > 0 && currentItem >= itemCount - 1) return false;
                 if (direction < 0 && currentItem <= 0) return false;
+                return true;
             }
         }
 
-        if (orientation == ViewPager2.ORIENTATION_HORIZONTAL) {
-            return child.canScrollHorizontally(direction);
-        } else {
-            return child.canScrollVertically(direction);
-        }
+        return orientation == ViewPager2.ORIENTATION_HORIZONTAL
+                ? child.canScrollHorizontally(direction)
+                : child.canScrollVertically(direction);
     }
 
     @Override
@@ -91,33 +117,37 @@ public class NestedScrollableHost extends FrameLayout {
         ViewPager2 parentViewPager = getParentViewPager();
         if (parentViewPager == null) return;
 
-        int orientation = parentViewPager.getOrientation();
+        switch (ev.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN -> {
+                initialX = ev.getX();
+                initialY = ev.getY();
+                isGestureLocked = false;
+                getParent().requestDisallowInterceptTouchEvent(true);
+            }
+            case MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                isGestureLocked = false;
+                getParent().requestDisallowInterceptTouchEvent(false);
+                releaseLockedSwipeRefresh();
+            }
+            case MotionEvent.ACTION_MOVE -> {
+                if (isGestureLocked) return;
 
-        if (!canChildScroll(orientation, -1f) && !canChildScroll(orientation, 1f)) {
-            return;
-        }
+                float dx = ev.getX() - initialX;
+                float dy = ev.getY() - initialY;
+                float absDx = Math.abs(dx);
+                float absDy = Math.abs(dy);
 
-        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            initialX = ev.getX();
-            initialY = ev.getY();
-            getParent().requestDisallowInterceptTouchEvent(true);
-        } else if (ev.getAction() == MotionEvent.ACTION_MOVE) {
-            float dx = ev.getX() - initialX;
-            float dy = ev.getY() - initialY;
-            boolean isVpHorizontal = orientation == ViewPager2.ORIENTATION_HORIZONTAL;
+                if (absDx > touchSlop || absDy > touchSlop) {
+                    isGestureLocked = true;
+                    boolean isHorizontal = absDx >= absDy;
 
-            // ViewPager2 touch-slop is 2x the child's touch-slop
-            float scaledDx = Math.abs(dx) * (isVpHorizontal ? 0.5f : 1f);
-            float scaledDy = Math.abs(dy) * (isVpHorizontal ? 1f : 0.5f);
-
-            if (scaledDx > touchSlop || scaledDy > touchSlop) {
-                if (isVpHorizontal == (scaledDy > scaledDx)) {
-                    // Perpendicular gesture - let parent handle it
-                    getParent().requestDisallowInterceptTouchEvent(false);
-                } else {
-                    // Parallel gesture - delegate based on child scroll capability
-                    boolean childCanScroll = canChildScroll(orientation, isVpHorizontal ? dx : dy);
-                    getParent().requestDisallowInterceptTouchEvent(childCanScroll);
+                    if (parentViewPager.getOrientation() == ViewPager2.ORIENTATION_HORIZONTAL && isHorizontal) {
+                        getParent().requestDisallowInterceptTouchEvent(canChildScroll(ViewPager2.ORIENTATION_HORIZONTAL, dx));
+                        lockedSwipeRefresh = findSwipeRefresh();
+                        if (lockedSwipeRefresh != null) lockedSwipeRefresh.setEnabled(false);
+                    } else {
+                        getParent().requestDisallowInterceptTouchEvent(false);
+                    }
                 }
             }
         }
