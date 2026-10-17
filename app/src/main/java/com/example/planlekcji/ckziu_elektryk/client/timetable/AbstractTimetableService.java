@@ -14,9 +14,11 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class AbstractTimetableService extends ClientService implements TimetableService {
@@ -39,20 +41,21 @@ public abstract class AbstractTimetableService extends ClientService implements 
         return apiResponseCall.error(handleError())
                 .success(successResponse -> {
                     List<SchoolEntry> schoolEntries = new ArrayList<>();
+                    Set<String> seenTokens = new HashSet<>();
 
                     JsonArray jsonArray = successResponse.getJsonElement().getAsJsonArray();
 
                     for (JsonElement element : jsonArray) {
                         JsonObject jsonObject = element.getAsJsonObject();
+                        String token = jsonObject.get("shortcut").getAsString();
 
-                        SchoolEntry entry = new SchoolEntry(
-                                jsonObject.get("shortcut").getAsString()
-                        );
-
-                        if (jsonObject.has("name"))
-                            entry.setName(jsonObject.get("name").getAsString());
-
-                        schoolEntries.add(entry);
+                        if (seenTokens.add(token)) {
+                            SchoolEntry entry = new SchoolEntry(token);
+                            if (jsonObject.has("name")) {
+                                entry.setName(jsonObject.get("name").getAsString());
+                            }
+                            schoolEntries.add(entry);
+                        }
                     }
 
                     return schoolEntries;
