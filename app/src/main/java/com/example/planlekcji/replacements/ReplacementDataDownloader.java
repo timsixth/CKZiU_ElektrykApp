@@ -135,22 +135,4 @@ public class ReplacementDataDownloader implements Runnable {
         }
     }
 
-    public static Date[] getNext5Dates() {
-        Date[] dates = new Date[5];
-        Calendar cal = Calendar.getInstance();
-
-        int count = 0;
-        while (count < 5) {
-            int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-
-            if (dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY) {
-                dates[count] = cal.getTime();
-                count++;
-            }
-
-            cal.add(Calendar.DAY_OF_MONTH, 1);
-        }
-
-        return dates;
-    }
 }
