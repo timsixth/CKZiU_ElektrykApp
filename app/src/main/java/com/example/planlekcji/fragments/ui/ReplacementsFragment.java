@@ -1,6 +1,7 @@
 package com.example.planlekcji.fragments.ui;
 
 import android.os.Bundle;
+import android.text.Html;
 
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
@@ -23,9 +24,11 @@ import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.replacements.DayReplacements;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class ReplacementsFragment extends Fragment {
     private List<DayReplacements> replacements;
@@ -82,13 +85,11 @@ public class ReplacementsFragment extends Fragment {
 
             boolean isClassType = (MainActivity.getTimetableType() == SchoolEntryType.CLASSES);
 
+            Map<String, List<CharSequence>> groupedDetails = new LinkedHashMap<>();
+
             for (Replacement replacement : dayReplacements) {
                 if (replacement.changes() != null && !replacement.changes().isEmpty()) {
                     for (ReplacementChange change : replacement.changes()) {
-                        CardView replacementCard = (CardView) inflater.inflate(R.layout.replacement_card, dayCardLayout, false);
-                        TextView replacementTitle = replacementCard.findViewById(R.id.textView_replacementTitle);
-                        TextView replacementDetails = replacementCard.findViewById(R.id.textView_replacementDetails);
-
                         String period = change.period();
                         String lessonText;
                         if (period == null) {
@@ -98,6 +99,9 @@ public class ReplacementsFragment extends Fragment {
                         } else {
                             lessonText = getString(R.string.lesson_label, period);
                         }
+
+                        String title;
+                        CharSequence detailText;
 
                         if (isClassType) {
                             String info = change.info();
@@ -111,24 +115,69 @@ public class ReplacementsFragment extends Fragment {
                             }
 
                             subjectName = capitalizeSubject(subjectName);
-                            replacementTitle.setText(subjectName);
-                            if (!statusOrTeacher.isEmpty()) {
-                                replacementDetails.setText(getString(R.string.replacement_details_format, lessonText, statusOrTeacher));
-                            } else {
-                                replacementDetails.setText(lessonText);
-                            }
+                            title = subjectName;
+                            detailText = formatItemDetailsHtml(lessonText, statusOrTeacher);
                         } else {
-                            replacementTitle.setText(replacement.name());
-                            replacementDetails.setText(getString(R.string.replacement_details_format, lessonText, formatReplacementInfo(change.info())));
+                            title = replacement.name();
+                            detailText = formatItemDetailsHtml(lessonText, formatReplacementInfo(change.info()));
                         }
 
-                        dayCardLayout.addView(replacementCard);
+                        if (title == null) title = "";
+
+                        groupedDetails.computeIfAbsent(title, k -> new ArrayList<>()).add(detailText);
                     }
                 }
             }
 
+            for (Map.Entry<String, List<CharSequence>> entry : groupedDetails.entrySet()) {
+                String title = entry.getKey();
+                List<CharSequence> detailsList = entry.getValue();
+
+                CardView replacementCard = (CardView) inflater.inflate(R.layout.replacement_card, dayCardLayout, false);
+                TextView replacementTitle = replacementCard.findViewById(R.id.textView_replacementTitle);
+                LinearLayout itemsLayout = replacementCard.findViewById(R.id.layout_replacementItems);
+
+                replacementTitle.setText(title);
+
+                for (int i = 0; i < detailsList.size(); i++) {
+                    View row = inflater.inflate(R.layout.replacement_item_row, itemsLayout, false);
+                    View divider = row.findViewById(R.id.view_itemDivider);
+                    TextView itemText = row.findViewById(R.id.textView_itemDetails);
+
+                    if (i == 0) {
+                        divider.setVisibility(View.GONE);
+                    } else {
+                        divider.setVisibility(View.VISIBLE);
+                    }
+
+                    itemText.setText(detailsList.get(i));
+                    itemsLayout.addView(row);
+                }
+
+                dayCardLayout.addView(replacementCard);
+            }
+
             layout.addView(dayCard);
         }
+    }
+
+    private CharSequence formatItemDetailsHtml(String lesson, String info) {
+        String lessonStr = (lesson != null) ? lesson : "";
+        String infoStr = (info != null) ? info : "";
+
+        StringBuilder sb = new StringBuilder();
+        if (!lessonStr.isEmpty()) {
+            sb.append("<b>").append(lessonStr).append("</b>");
+        }
+
+        if (!infoStr.isEmpty()) {
+            if (!lessonStr.isEmpty()) {
+                sb.append(" — ");
+            }
+            sb.append(infoStr);
+        }
+
+        return Html.fromHtml(sb.toString(), Html.FROM_HTML_MODE_LEGACY);
     }
 
     private boolean areReplacementsEmpty() {
