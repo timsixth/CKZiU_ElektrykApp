@@ -91,4 +91,5 @@
     <string name="settings_notifications_articles">Nowe artykuły</string>
     <string name="settings_notifications_articles_desc">Otrzymuj powiadomienia o nowych artykułach</string>
     <string name="settings_notifications_permission_denied">Wymagane jest uprawnienie do powiadomień. Dotknij tutaj, aby włączyć je w ustawieniach systemu.</string>
+    <string name="timetable_replacement_banner_text">Dostępne zastępstwo. Naciśnij, aby sprawdzić.</string>
 </resources>

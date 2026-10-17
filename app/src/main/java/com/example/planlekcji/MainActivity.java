@@ -250,6 +250,12 @@ public class MainActivity extends AppCompatActivity implements LiveUpdateRelay.L
         handleNotificationIntent(intent);
     }
 
+    public void navigateToTab(int tabId) {
+        if (viewPager2_appContent != null) {
+            viewPager2_appContent.setCurrentItem(tabId, true);
+        }
+    }
+
     private void handleNotificationIntent(Intent intent) {
         if (intent == null || !intent.hasExtra(EXTRA_TARGET_TAB) || viewPager2_appContent == null) {
             return;
@@ -319,6 +325,7 @@ public class MainActivity extends AppCompatActivity implements LiveUpdateRelay.L
                 if (mainViewModel.isTimetableNeedsRefresh()) {
                     mainViewModel.setTimetableNeedsRefresh(false);
                     mainViewModel.fetchTimetable();
+                    mainViewModel.fetchReplacements();
                 }
             }
             case ViewPagerAdapter.REPLACEMENTS_TAB_ID -> {

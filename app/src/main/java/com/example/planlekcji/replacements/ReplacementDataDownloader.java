@@ -110,7 +110,7 @@ public class ReplacementDataDownloader implements Runnable {
                 if (timetableType == SchoolEntryType.CLASSES) {
                     filtered = rawReplacements.stream()
                             .filter(Objects::nonNull)
-                            .filter(r -> Objects.equals(r.name(), token))
+                            .filter(r -> r.name() != null && r.name().trim().equalsIgnoreCase(token.trim()))
                             .collect(Collectors.toList());
                 } else {
                     filtered = rawReplacements.stream()

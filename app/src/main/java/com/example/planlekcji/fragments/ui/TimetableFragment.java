@@ -41,7 +41,12 @@ public class TimetableFragment extends Fragment {
 
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
+        if (mainViewModel.getReplacementsLiveData().getValue() == null) {
+            mainViewModel.fetchReplacements();
+        }
+
         observeAndHandleTimetableLiveData();
+        observeReplacementsLiveData();
 
         viewPager_timetable = view.findViewById(R.id.viewPager_timetable);
         viewPager_timetable.setOffscreenPageLimit(5);
@@ -61,6 +66,15 @@ public class TimetableFragment extends Fragment {
         viewPager_timetable.setAdapter(adapter);
     }
 
+    private void observeReplacementsLiveData() {
+        mainViewModel.getReplacementsLiveData().observe(getViewLifecycleOwner(), replacements -> {
+            if (timetableMap != null && !timetableMap.isEmpty()) {
+                setAdapterToViewPager();
+                setHeadersToTabLayout();
+            }
+        });
+    }
+
     private void observeAndHandleTimetableLiveData() {
         mainViewModel.getTimetableLiveData().observe(getViewLifecycleOwner(), newTimetableMap -> {
             timetableMap = newTimetableMap;
@@ -74,12 +88,13 @@ public class TimetableFragment extends Fragment {
             hideEmptyState();
             setAdapterToViewPager();
 
-            setHeadersToTabLayout();
-
             if (!isInitialDaySet) {
                 setCurrentDay();
                 isInitialDaySet = true;
             }
+
+            setHeadersToTabLayout();
+            viewPager_timetable.post(this::setCurrentDay);
         });
     }
 
@@ -137,6 +152,7 @@ public class TimetableFragment extends Fragment {
      * If the current day is Saturday or Sunday, it defaults to Monday.
      */
     private void setCurrentDay() {
+        if (viewPager_timetable == null) return;
         Calendar calendar = GregorianCalendar.getInstance();
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
@@ -148,6 +164,6 @@ public class TimetableFragment extends Fragment {
             default -> 0;
         };
 
-        viewPager_timetable.setCurrentItem(dayNumb);
+        viewPager_timetable.setCurrentItem(dayNumb, false);
     }
 }

@@ -19,9 +19,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.planlekcji.MainActivity;
+import com.example.planlekcji.MainViewModel;
 import com.example.planlekcji.R;
+import com.example.planlekcji.fragments.ViewPagerAdapter;
+import com.example.planlekcji.replacements.DayReplacements;
+import com.example.planlekcji.timetable.utils.TimetableReplacementMatcher;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.SchoolEntryType;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.GroupLesson;
 import com.example.planlekcji.ckziu_elektryk.client.timetable.lesson.Lesson;
@@ -50,6 +55,7 @@ import java.util.stream.Collectors;
 public class LessonFragment extends Fragment {
     public static final String TITLE = "title";
     private Map<DayOfWeek, List<Lesson>> timetableMap;
+    private MainViewModel mainViewModel;
 
     public LessonFragment() {
     }
@@ -66,6 +72,7 @@ public class LessonFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         populateCards();
     }
 
@@ -180,6 +187,8 @@ public class LessonFragment extends Fragment {
 
         for (TimetableCardItem item : cardItems) {
             MaterialCardView cardView = (MaterialCardView) inflater.inflate(R.layout.lesson_card, layout, false);
+            View bannerDivider = cardView.findViewById(R.id.divider_replacementBanner);
+            View bannerLayout = cardView.findViewById(R.id.layout_replacementBanner);
 
             TextView lessonHoursText = cardView.findViewById(R.id.textViewLessonHours);
             TextView lessonNumber = cardView.findViewById(R.id.textViewLessonNumber);
@@ -416,6 +425,29 @@ public class LessonFragment extends Fragment {
                 if (divider != null) {
                     divider.setBackgroundColor(strokeColor);
                 }
+            }
+
+            if (isClassesTimetable && mainViewModel != null) {
+                List<DayReplacements> replacements = mainViewModel.getReplacementsLiveData().getValue();
+                boolean hasReplacement = TimetableReplacementMatcher.hasReplacementForLesson(
+                        replacements, thisDayNumber, item.startNumber, classToken, null
+                );
+
+                if (hasReplacement && bannerLayout != null) {
+                    if (bannerDivider != null) bannerDivider.setVisibility(View.VISIBLE);
+                    bannerLayout.setVisibility(View.VISIBLE);
+                    bannerLayout.setOnClickListener(v -> {
+                        if (getActivity() instanceof MainActivity activity) {
+                            activity.navigateToTab(ViewPagerAdapter.REPLACEMENTS_TAB_ID);
+                        }
+                    });
+                } else {
+                    if (bannerDivider != null) bannerDivider.setVisibility(View.GONE);
+                    if (bannerLayout != null) bannerLayout.setVisibility(View.GONE);
+                }
+            } else {
+                if (bannerDivider != null) bannerDivider.setVisibility(View.GONE);
+                if (bannerLayout != null) bannerLayout.setVisibility(View.GONE);
             }
 
             layout.addView(cardView);

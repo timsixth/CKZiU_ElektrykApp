@@ -102,4 +102,5 @@
     <string name="settings_notifications_articles">Articles</string>
     <string name="settings_notifications_articles_desc">Receive notifications about new articles</string>
     <string name="settings_notifications_permission_denied">Notification permission is required. Tap here to enable it in system settings.</string>
+    <string name="timetable_replacement_banner_text">Dostępne zastępstwo. Naciśnij, aby sprawdzić.</string>
 </resources>
